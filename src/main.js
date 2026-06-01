@@ -42,7 +42,7 @@ async function maybeAutoStartOnlineDuel(room) {
   if (!canAutoStartFromLobby(room)) return;
   if (room?.gameState?.gameMode === 'ai') return;
   const seat = currentSeatForState(room.gameState);
-  if (seat !== 'p1') return;
+  if (seat === 'p2') return;
   const key = `${room.gameState.roomCode}:${room.gameState.version || 0}:start`;
   if (autoStartAttempts.has(key)) return;
   autoStartAttempts.add(key);
@@ -376,42 +376,6 @@ document.addEventListener('click', async (event) => {
     }
     if (action === 'clear-selection') {
       uiState.selectedCardId = null; uiState.selectedUnitLane = null; window.__lovParrySelection = [];
-const autoStartAttempts = new Set();
-
-function currentSeatForState(state) {
-  return state ? seatByUid(state, getUid()) : null;
-}
-
-function canAutoStartFromLobby(room) {
-  const state = room?.gameState;
-  if (!state || state.status !== 'lobby') return false;
-  if (!state.players?.p1?.uid || !state.players?.p2?.uid) return false;
-  if (!state.players.p1.faction || !state.players.p2.faction) return false;
-  if (!state.players.p1.ready || !state.players.p2.ready) return false;
-  return true;
-}
-
-async function maybeAutoStartOnlineDuel(room) {
-  // Online ready handshake: once both ready flags are visible in Firebase, only
-  // Player 1 performs the heavier START_GAME write. This separates the small
-  // Ready click from the deck-building/start-game write so the second Ready
-  // button does not get stuck carrying all of that work.
-  if (!canAutoStartFromLobby(room)) return;
-  if (room?.gameState?.gameMode === 'ai') return;
-  const seat = currentSeatForState(room.gameState);
-  if (seat !== 'p1') return;
-  const key = `${room.gameState.roomCode}:${room.gameState.version || 0}:start`;
-  if (autoStartAttempts.has(key)) return;
-  autoStartAttempts.add(key);
-
-  try {
-    toast('Both commanders are ready. Starting duel...');
-    await dispatch({ type: 'START_GAME', force: true, seat: 'p1' });
-  } catch (err) {
-    console.error('Auto-start failed:', err);
-    toast(err?.message || 'Auto-start failed. Use Start Duel Now.');
-  }
-}
       render();
       return;
     }
@@ -463,83 +427,11 @@ async function maybeAutoStartOnlineDuel(room) {
     if (action === 'submit-parry') {
       await dispatch({ type: 'SUBMIT_PARRY', cardIds: window.__lovParrySelection || [] });
       window.__lovParrySelection = [];
-const autoStartAttempts = new Set();
-
-function currentSeatForState(state) {
-  return state ? seatByUid(state, getUid()) : null;
-}
-
-function canAutoStartFromLobby(room) {
-  const state = room?.gameState;
-  if (!state || state.status !== 'lobby') return false;
-  if (!state.players?.p1?.uid || !state.players?.p2?.uid) return false;
-  if (!state.players.p1.faction || !state.players.p2.faction) return false;
-  if (!state.players.p1.ready || !state.players.p2.ready) return false;
-  return true;
-}
-
-async function maybeAutoStartOnlineDuel(room) {
-  // Online ready handshake: once both ready flags are visible in Firebase, only
-  // Player 1 performs the heavier START_GAME write. This separates the small
-  // Ready click from the deck-building/start-game write so the second Ready
-  // button does not get stuck carrying all of that work.
-  if (!canAutoStartFromLobby(room)) return;
-  if (room?.gameState?.gameMode === 'ai') return;
-  const seat = currentSeatForState(room.gameState);
-  if (seat !== 'p1') return;
-  const key = `${room.gameState.roomCode}:${room.gameState.version || 0}:start`;
-  if (autoStartAttempts.has(key)) return;
-  autoStartAttempts.add(key);
-
-  try {
-    toast('Both commanders are ready. Starting duel...');
-    await dispatch({ type: 'START_GAME', force: true, seat: 'p1' });
-  } catch (err) {
-    console.error('Auto-start failed:', err);
-    toast(err?.message || 'Auto-start failed. Use Start Duel Now.');
-  }
-}
       return;
     }
     if (action === 'decline-parry') {
       await dispatch({ type: 'DECLINE_PARRY' });
       window.__lovParrySelection = [];
-const autoStartAttempts = new Set();
-
-function currentSeatForState(state) {
-  return state ? seatByUid(state, getUid()) : null;
-}
-
-function canAutoStartFromLobby(room) {
-  const state = room?.gameState;
-  if (!state || state.status !== 'lobby') return false;
-  if (!state.players?.p1?.uid || !state.players?.p2?.uid) return false;
-  if (!state.players.p1.faction || !state.players.p2.faction) return false;
-  if (!state.players.p1.ready || !state.players.p2.ready) return false;
-  return true;
-}
-
-async function maybeAutoStartOnlineDuel(room) {
-  // Online ready handshake: once both ready flags are visible in Firebase, only
-  // Player 1 performs the heavier START_GAME write. This separates the small
-  // Ready click from the deck-building/start-game write so the second Ready
-  // button does not get stuck carrying all of that work.
-  if (!canAutoStartFromLobby(room)) return;
-  if (room?.gameState?.gameMode === 'ai') return;
-  const seat = currentSeatForState(room.gameState);
-  if (seat !== 'p1') return;
-  const key = `${room.gameState.roomCode}:${room.gameState.version || 0}:start`;
-  if (autoStartAttempts.has(key)) return;
-  autoStartAttempts.add(key);
-
-  try {
-    toast('Both commanders are ready. Starting duel...');
-    await dispatch({ type: 'START_GAME', force: true, seat: 'p1' });
-  } catch (err) {
-    console.error('Auto-start failed:', err);
-    toast(err?.message || 'Auto-start failed. Use Start Duel Now.');
-  }
-}
       return;
     }
     if (action === 'end-conflict') {

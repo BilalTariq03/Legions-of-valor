@@ -156,12 +156,7 @@ function readyPlayer(state, action, uid) {
 }
 
 function startGame(state, action, uid, fromReady = false) {
-  // Normal path: called automatically by the second Ready click.
-  // Backup path: lobby Start Duel Now button passes action.force. This is useful
-  // during LAN testing if a browser misses one ready click, but both players
-  // are already seated and have chosen factions.
-  // Force start intentionally does not require the current browser UID to match
-  // a seat, because anonymous auth can change after a browser cache reset.
+  if (state.status !== 'lobby') return state;
   if (!fromReady && !action?.force) requireActor(state, uid);
   if (!state.players.p1.uid || !state.players.p2.uid) return errorState(state, 'Both seats must be filled.');
   if (!state.players.p1.faction || !state.players.p2.faction) return errorState(state, 'Both players must choose factions.');

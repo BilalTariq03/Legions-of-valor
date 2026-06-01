@@ -26,11 +26,13 @@ export function findSeatByUid(state, uid) {
 }
 
 export function playerUnitCount(player) {
-  return CONFIG.LANES.filter(lane => player.board.lanes[lane].unit).length;
+  if (!player?.board?.lanes) return 0;
+  return CONFIG.LANES.filter(lane => player.board.lanes[lane]?.unit).length;
 }
 
 export function allUnits(player) {
-  return CONFIG.LANES.map(lane => ({ lane, unit: player.board.lanes[lane].unit })).filter(x => x.unit);
+  if (!player?.board?.lanes) return [];
+  return CONFIG.LANES.map(lane => ({ lane, unit: player.board.lanes[lane]?.unit })).filter(x => x.unit);
 }
 
 export function hasAbility(card, abilityName) {
