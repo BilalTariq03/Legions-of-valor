@@ -275,7 +275,7 @@ function renderPlayerStrip(player, hiddenHand = false) {
 
 function renderLaneRow(state, seat, opponent, uiState) {
   return `<div class="lane-zone">${CONFIG.LANES.map(lane => {
-    const unit = state.players[seat].board.lanes[lane].unit;
+    const unit = state.players[seat]?.board?.lanes?.[lane]?.unit ?? null;
     const ap = unit ? calculateAP(state, seat, lane, opponent ? 'defense' : 'neutral') : 0;
     return `<div class="lane" data-label="${opponent ? 'Enemy' : 'Your'} ${titleCaseLane(lane)}">
       ${unit ? renderCard(unit, { board: true, lane, owner: seat, selected: !opponent && uiState.selectedUnitLane === lane, ap, clickable: !opponent }) : '<span class="empty-slot">Empty lane</span>'}
@@ -285,7 +285,7 @@ function renderLaneRow(state, seat, opponent, uiState) {
 
 function renderBackrow(state, seat, opponent) {
   return `<div class="backrow-zone">${CONFIG.LANES.map(lane => {
-    const back = state.players[seat].board.backrow[lane];
+    const back = state.players[seat]?.board?.backrow?.[lane] ?? null;
     return `<div class="back-slot" data-label="${opponent ? 'Enemy' : 'Your'} Back Row ${titleCaseLane(lane)}">
       ${back ? (opponent ? '<div class="face-down-card">Hidden</div>' : renderFaceDown(back)) : '<span class="empty-slot">Empty back row</span>'}
     </div>`;

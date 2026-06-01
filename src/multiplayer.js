@@ -1,9 +1,34 @@
 import { fb, getDb, firebaseReady } from './firebase.js';
-import { createInitialGameState } from './core/game-state.js';
+import { createInitialGameState, emptyBoard } from './core/game-state.js';
 import { reduceGameState } from './core/reducer.js';
 import { CONFIG } from './core/config.js';
 import { roomCode } from './core/utils.js';
 import { BOT_UID, botDisplayName } from './ai/ai-player.js';
+
+// Firebase Realtime Database silently removes keys whose value is null.
+// This means an empty backrow { left: null, center: null, right: null } comes
+// back as undefined after a round-trip, crashing any code that reads .backrow[lane].
+// We reconstruct the board skeleton whenever a room is read back from Firebase.
+function repairGameState(state) {
+  if (!state?.players) return state;
+  for (const seat of ['p1', 'p2']) {
+    const player = state.players[seat];
+    if (!player) continue;
+    if (!player.board) player.board = emptyBoard();
+    if (!player.board.lanes) player.board.lanes = {};
+    if (!player.board.backrow) player.board.backrow = {};
+    for (const lane of CONFIG.LANES) {
+      if (!player.board.lanes[lane]) player.board.lanes[lane] = { unit: null };
+      if (player.board.backrow[lane] === undefined) player.board.backrow[lane] = null;
+    }
+  }
+  return state;
+}
+
+function repairRoom(room) {
+  if (room?.gameState) room.gameState = repairGameState(room.gameState);
+  return room;
+}
 
 // Local fallback: helps you preview UI before Firebase config is added.
 // It is NOT online multiplayer. Online 1v1 requires Firebase configured.
@@ -195,7 +220,7 @@ export function listenToRoom(roomCodeValue, callback) {
   }
   const db = getDb();
   const roomRef = fb.ref(db, `rooms/${roomCodeValue}`);
-  const unsubscribe = fb.onValue(roomRef, snap => callback(snap.val()));
+  const unsubscribe = fb.onValue(roomRef, snap => callback(repairRoom(snap.val())));
 
   // Extra sync poller for LAN testing. onValue should be enough, but this makes
   // the lobby recover if a browser tab misses a realtime event while another
@@ -203,7 +228,7 @@ export function listenToRoom(roomCodeValue, callback) {
   const poll = setInterval(async () => {
     try {
       const snap = await fb.get(roomRef);
-      if (snap.exists()) callback(snap.val());
+      if (snap.exists()) callback(repairRoom(snap.val()));
     } catch (_) {}
   }, 5000);
 
@@ -233,7 +258,7 @@ export async function dispatchRoomAction(roomCodeValue, action, uid) {
   const snap = await withTimeout(fb.get(roomRef), 12000, 'Reading the Firebase room');
   if (!snap.exists()) throw new Error('Room not found. Create a new room and try again.');
 
-  const room = prepareRoomForFirebase(snap.val());
+  const room = repairRoom(prepareRoomForFirebase(snap.val()));
   if (!room?.gameState) throw new Error('Room data is missing game state. Create a new room.');
 
   const newState = stripUndefined(reduceGameState(room.gameState, action, uid));
