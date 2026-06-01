@@ -1,0 +1,21 @@
+READY-UP / FIREBASE START-GAME FIX
+
+Problem:
+- One player could ready up, but the second player's Ready button appeared to do nothing.
+- The lobby did not hang, because the UI was still usable.
+
+Cause:
+- The second Ready click starts the game and creates full faction decks.
+- Some generated card instances had optional JavaScript fields with undefined values.
+- Firebase Realtime Database rejects undefined values, so the transaction failed before saving the ready state / game start.
+
+Fix:
+- Updated src/multiplayer.js to strip undefined values before every Firebase write.
+- Updated src/core/game-state.js so card instances only include unit-only fields when the card is actually a unit.
+- Added visible lobby error display so Firebase/game errors are not hidden.
+- Added a small ready-seat fallback to make LAN testing more forgiving.
+
+Use:
+- Extract this ZIP.
+- Run CLICK_ME_RUN_GAME_NO_PYTHON.bat on the host laptop.
+- Use the copied LAN invite link on the second laptop.

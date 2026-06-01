@@ -1,0 +1,1 @@
+Fixes Player 2 joining but still showing as Empty Seat. joinRoom now uses read-write-read instead of Firebase transaction and throws visible errors if seat claim fails. Use a new room.

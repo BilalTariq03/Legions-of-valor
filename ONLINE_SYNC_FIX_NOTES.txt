@@ -1,0 +1,1 @@
+Fixes split lobby/game state by removing local fast lobby writes, adding a Firebase poller, passing stable seat hints, and making battleplan clicks use the active player seat.

@@ -1,0 +1,23 @@
+ONLINE READY + UI STABILITY FIX
+
+This build fixes two problems reported during LAN/Firebase testing:
+
+1. Ready not applying on Player 1 / seat identity mismatch
+   - The browser now remembers which seat it owns per room code.
+   - If Firebase Anonymous Auth refreshes the temporary UID, actions still use the remembered seat.
+   - Create Room stores P1 locally; Join Room stores the joined seat locally.
+   - The lobby renders controls based on the remembered seat as well as Firebase UID.
+
+2. Dropdowns closing + buttons looking like fast animation loops
+   - The Firebase poller was causing full lobby re-renders even when nothing changed.
+   - The game now compares the actual gameState and ignores duplicate snapshots.
+   - Polling interval was slowed down.
+   - Button/card hover animations were calmed down.
+
+Important test steps:
+- Close old tabs and the old server window.
+- Extract this ZIP fresh.
+- Run CLICK_ME_RUN_GAME_NO_PYTHON.bat.
+- Create a NEW room.
+- Join with the NEW invite link.
+- Do not reuse old rooms from previous builds.

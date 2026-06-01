@@ -1,0 +1,25 @@
+LEGIONS OF VALOR - AI BOT UPDATE
+=================================
+
+This build adds a solo mode from the title screen.
+
+New title-screen option:
+- Play vs AI
+- Choose your faction
+- Choose the bot faction
+- Choose difficulty: Easy, Normal, or Hard
+- Click Start AI Duel
+
+How the AI works:
+- The AI sits in Player 2.
+- It uses the same game rules/reducer as a human player.
+- It chooses Battleplans, deploys units, equips cards, sets traps on higher difficulties, attacks, ends phases, and answers Parry prompts.
+
+Difficulty notes:
+- Easy: weaker Battleplan choices, fewer parries, basic attacks.
+- Normal: better Battleplan choices, basic parry logic, cautious strikes into hidden back rows.
+- Hard: stronger Battleplan scoring, better parry decisions, better deployment and target selection.
+
+Important:
+- This is still an MVP training bot, not a perfect competitive AI.
+- The bot is meant to let you test flow, balance, card feel, and basic gameplay without needing a second laptop.

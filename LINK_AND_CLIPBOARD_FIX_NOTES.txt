@@ -1,0 +1,14 @@
+Legions of Valor - Link + Clipboard Fix
+======================================
+
+What changed:
+1. Copy Invite Link no longer crashes on Microsoft Edge when the game is opened through a same-Wi-Fi IP address.
+   Edge often blocks navigator.clipboard on normal http://192.168.x.x pages, so the game now falls back to selecting/copying the invite link using an older browser method.
+
+2. The invite link remains an IP address during local testing because the game files are still being served from your own laptop.
+   Firebase Realtime Database only stores/syncs the game room data. It is not the public website URL for the game.
+
+3. After deployment to Firebase Hosting, the invite link will automatically become the public hosting link, for example:
+   https://your-project.web.app/?room=ABC123
+
+Until deployment, use the LAN IP link for second-laptop testing on the same Wi-Fi.

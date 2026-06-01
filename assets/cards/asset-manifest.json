@@ -1,0 +1,887 @@
+{
+  "generatedFrom": "Card Building (1).xlsx",
+  "cards": [
+    {
+      "id": "vaelori_scout",
+      "name": "Vaelori Scout",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/vaelori_scout.png"
+    },
+    {
+      "id": "thraal_watcher",
+      "name": "Thraal-Watcher",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/thraal_watcher.png"
+    },
+    {
+      "id": "vaelori_mist_seer",
+      "name": "Vaelori Mist-Seer",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/vaelori_mist_seer.png"
+    },
+    {
+      "id": "elyndell_page",
+      "name": "Elyndell Page",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/elyndell_page.png"
+    },
+    {
+      "id": "sylvren_sapling",
+      "name": "Sylvren Sapling",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/sylvren_sapling.png"
+    },
+    {
+      "id": "mistborne_stalker",
+      "name": "Mistborne Stalker",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/mistborne_stalker.png"
+    },
+    {
+      "id": "canopy_archer",
+      "name": "Canopy Archer",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/canopy_archer.png"
+    },
+    {
+      "id": "elyndell_sentry",
+      "name": "Elyndell Sentry",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/elyndell_sentry.png"
+    },
+    {
+      "id": "lunareth_seer",
+      "name": "Lunareth Seer",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/lunareth_seer.png"
+    },
+    {
+      "id": "eredyll_guardian",
+      "name": "Eredyll Guardian",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/eredyll_guardian.png"
+    },
+    {
+      "id": "veilmother_huntress",
+      "name": "Veilmother Huntress",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/veilmother_huntress.png"
+    },
+    {
+      "id": "high_canopy_duelist",
+      "name": "High Canopy Duelist",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/high_canopy_duelist.png"
+    },
+    {
+      "id": "river_calith_guard",
+      "name": "River Calith Guard",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/river_calith_guard.png"
+    },
+    {
+      "id": "azure_sentinel",
+      "name": "Azure Sentinel",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/azure_sentinel.png"
+    },
+    {
+      "id": "wind_singer",
+      "name": "Wind-Singer",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/wind_singer.png"
+    },
+    {
+      "id": "forest_oakling",
+      "name": "Forest Oakling",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/forest_oakling.png"
+    },
+    {
+      "id": "variels_chosen",
+      "name": "Variel’s Chosen",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/variels_chosen.png"
+    },
+    {
+      "id": "moon_veil_assassin",
+      "name": "Moon-Veil Assassin",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/moon_veil_assassin.png"
+    },
+    {
+      "id": "bound_behemoth",
+      "name": "Bound Behemoth",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/bound_behemoth.png"
+    },
+    {
+      "id": "heral_the_savior",
+      "name": "Hera'l The Savior",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/heral_the_savior.png"
+    },
+    {
+      "id": "jena_of_yel",
+      "name": "Jena of Y'el",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/jena_of_yel.png"
+    },
+    {
+      "id": "aradin_nox",
+      "name": "Aradin Nox",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/aradin_nox.png"
+    },
+    {
+      "id": "queen_variel_of_elyndell",
+      "name": "Queen Variel of Elyndell",
+      "type": "unit",
+      "faction": "Elves",
+      "image": "assets/cards/elves/queen_variel_of_elyndell.png"
+    },
+    {
+      "id": "plague_stricken_exile",
+      "name": "Plague-Stricken Exile",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/plague_stricken_exile.png"
+    },
+    {
+      "id": "giant_carrier_scout",
+      "name": "Giant-Carrier Scout",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/giant_carrier_scout.png"
+    },
+    {
+      "id": "soren_grave_crosser",
+      "name": "Soren, Grave Crosser",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/soren_grave_crosser.png"
+    },
+    {
+      "id": "plagued_foot_solder",
+      "name": "Plagued Foot Solder",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/plagued_foot_solder.png"
+    },
+    {
+      "id": "kaelen_the_scorcher",
+      "name": "Kaelen the Scorcher",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/kaelen_the_scorcher.png"
+    },
+    {
+      "id": "aurion_vein_digger",
+      "name": "Aurion-Vein Digger",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/aurion_vein_digger.png"
+    },
+    {
+      "id": "imperial_archive_master",
+      "name": "Imperial Archive-Master",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/imperial_archive_master.png"
+    },
+    {
+      "id": "cultist_of_the_spark",
+      "name": "Cultist of the Spark",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/cultist_of_the_spark.png"
+    },
+    {
+      "id": "river_calith_marine",
+      "name": "River Calith Marine",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/river_calith_marine.png"
+    },
+    {
+      "id": "dame_valen_of_calith",
+      "name": "Dame Valen of Calith",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/dame_valen_of_calith.png"
+    },
+    {
+      "id": "iron_field_sapper",
+      "name": "Iron-Field Sapper",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/iron_field_sapper.png"
+    },
+    {
+      "id": "hysterical_seer",
+      "name": "Hysterical Seer",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/hysterical_seer.png"
+    },
+    {
+      "id": "consortium_guard",
+      "name": "Consortium Guard",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/consortium_guard.png"
+    },
+    {
+      "id": "iron_field_knight",
+      "name": "Iron-Field Knight",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/iron_field_knight.png"
+    },
+    {
+      "id": "baron_malvorn",
+      "name": "Baron Malvorn",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/baron_malvorn.png"
+    },
+    {
+      "id": "aurion_degenerate",
+      "name": "Aurion Degenerate",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/aurion_degenerate.png"
+    },
+    {
+      "id": "valtherion_paladin",
+      "name": "Valtherion Paladin",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/valtherion_paladin.png"
+    },
+    {
+      "id": "consortium_grandmaster_lewin",
+      "name": "Consortium Grandmaster Lewin",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/consortium_grandmaster_lewin.png"
+    },
+    {
+      "id": "captain_leonard",
+      "name": "Captain Leonard",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/captain_leonard.png"
+    },
+    {
+      "id": "captain_rodry",
+      "name": "Captain Rodry",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/captain_rodry.png"
+    },
+    {
+      "id": "siege_master_torvin",
+      "name": "Siege-Master Torvin",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/siege_master_torvin.png"
+    },
+    {
+      "id": "commander_rykard",
+      "name": "Commander Rykard",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/commander_rykard.png"
+    },
+    {
+      "id": "grand_marshal_leonard",
+      "name": "Grand Marshal Leonard",
+      "type": "unit",
+      "faction": "Humans",
+      "image": "assets/cards/humans/grand_marshal_leonard.png"
+    },
+    {
+      "id": "cave_crawl_grunt",
+      "name": "Cave-Crawl Grunt",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/cave_crawl_grunt.png"
+    },
+    {
+      "id": "krell_the_blood_let",
+      "name": "Krell, the Blood-Let",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/krell_the_blood_let.png"
+    },
+    {
+      "id": "solkaran_depth_dweller",
+      "name": "Solkaran Depth Dweller",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/solkaran_depth_dweller.png"
+    },
+    {
+      "id": "orcish_militia",
+      "name": "Orcish Militia",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/orcish_militia.png"
+    },
+    {
+      "id": "orkhael_outcast",
+      "name": "Orkhael Outcast",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/orkhael_outcast.png"
+    },
+    {
+      "id": "ironhold_raider",
+      "name": "Ironhold Raider",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/ironhold_raider.png"
+    },
+    {
+      "id": "orkhael_scavenger",
+      "name": "Orkhael Scavenger",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/orkhael_scavenger.png"
+    },
+    {
+      "id": "vark_the_mangler",
+      "name": "Vark the Mangler",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/vark_the_mangler.png"
+    },
+    {
+      "id": "dread_pit_brawler",
+      "name": "Dread-Pit Brawler",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/dread_pit_brawler.png"
+    },
+    {
+      "id": "vanguard_mauler",
+      "name": "Vanguard Mauler",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/vanguard_mauler.png"
+    },
+    {
+      "id": "slaughter_cavern_vet",
+      "name": "Slaughter-Cavern Vet",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/slaughter_cavern_vet.png"
+    },
+    {
+      "id": "siege_breaker_orc",
+      "name": "Siege-Breaker Orc",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/siege_breaker_orc.png"
+    },
+    {
+      "id": "ivaan_bone_crusher",
+      "name": "Ivaan, Bone Crusher",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/ivaan_bone_crusher.png"
+    },
+    {
+      "id": "raging_orkhael",
+      "name": "Raging Orkhael",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/raging_orkhael.png"
+    },
+    {
+      "id": "elite_marauder",
+      "name": "Elite Marauder",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/elite_marauder.png"
+    },
+    {
+      "id": "thrak_pit_lord",
+      "name": "Thrak, Pit-Lord",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/thrak_pit_lord.png"
+    },
+    {
+      "id": "orkhael_warlord",
+      "name": "Orkhael Warlord",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/orkhael_warlord.png"
+    },
+    {
+      "id": "brugos_chosen",
+      "name": "Brugo’s Chosen",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/brugos_chosen.png"
+    },
+    {
+      "id": "gershaw_shatter_shield",
+      "name": "Gershaw Shatter-Shield",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/gershaw_shatter_shield.png"
+    },
+    {
+      "id": "high_chieftain_grog",
+      "name": "High Chieftain, Grog",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/high_chieftain_grog.png"
+    },
+    {
+      "id": "the_primeval_orkhael",
+      "name": "The Primeval Orkhael",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/the_primeval_orkhael.png"
+    },
+    {
+      "id": "brugo_the_bold",
+      "name": "Brugo, The Bold",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/brugo_the_bold.png"
+    },
+    {
+      "id": "gorthak_the_butcher",
+      "name": "Gorthak the Butcher",
+      "type": "unit",
+      "faction": "Orcs",
+      "image": "assets/cards/orcs/gorthak_the_butcher.png"
+    },
+    {
+      "id": "karak_duun_apprentice",
+      "name": "Karak-Duun Apprentice",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/karak_duun_apprentice.png"
+    },
+    {
+      "id": "upper_hall_prospector",
+      "name": "Upper-Hall Prospector",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/upper_hall_prospector.png"
+    },
+    {
+      "id": "deep_tier_sentry",
+      "name": "Deep-Tier Sentry",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/deep_tier_sentry.png"
+    },
+    {
+      "id": "stone_mark_surveyor",
+      "name": "Stone-Mark Surveyor",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/stone_mark_surveyor.png"
+    },
+    {
+      "id": "concord_delegate",
+      "name": "Concord Delegate",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/concord_delegate.png"
+    },
+    {
+      "id": "iron_grip_smith",
+      "name": "Iron-Grip Smith",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/iron_grip_smith.png"
+    },
+    {
+      "id": "deep_tier_miner",
+      "name": "Deep-Tier Miner",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/deep_tier_miner.png"
+    },
+    {
+      "id": "lower_vein_guard",
+      "name": "Lower-Vein Guard",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/lower_vein_guard.png"
+    },
+    {
+      "id": "karak_duun_legionnaire",
+      "name": "Karak-Duun Legionnaire",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/karak_duun_legionnaire.png"
+    },
+    {
+      "id": "concord_peacekeeper",
+      "name": "Concord Peacekeeper",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/concord_peacekeeper.png"
+    },
+    {
+      "id": "stone_wall_engineer",
+      "name": "Stone-Wall Engineer",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/stone_wall_engineer.png"
+    },
+    {
+      "id": "clergy_inquisitor",
+      "name": "Clergy Inquisitor",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/clergy_inquisitor.png"
+    },
+    {
+      "id": "mid_tier_artisan",
+      "name": "Mid-Tier Artisan",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/mid_tier_artisan.png"
+    },
+    {
+      "id": "forge_fire_disciple",
+      "name": "Forge-Fire Disciple",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/forge_fire_disciple.png"
+    },
+    {
+      "id": "iron_hold_defender",
+      "name": "Iron-hold Defender",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/iron_hold_defender.png"
+    },
+    {
+      "id": "concord_thane",
+      "name": "Concord Thane",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/concord_thane.png"
+    },
+    {
+      "id": "architect_of_the_deep",
+      "name": "Architect of the Deep",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/architect_of_the_deep.png"
+    },
+    {
+      "id": "gravemarch_warden",
+      "name": "Gravemarch Warden",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/gravemarch_warden.png"
+    },
+    {
+      "id": "high_priest_dalmir",
+      "name": "High Priest Dalmir",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/high_priest_dalmir.png"
+    },
+    {
+      "id": "chief_engineer_halgrin",
+      "name": "Chief Engineer Halgrin",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/chief_engineer_halgrin.png"
+    },
+    {
+      "id": "velgrum_the_gatekeeper",
+      "name": "Velgrum the Gatekeeper",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/velgrum_the_gatekeeper.png"
+    },
+    {
+      "id": "excavation_knight_engval",
+      "name": "Excavation Knight, Engval",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/excavation_knight_engval.png"
+    },
+    {
+      "id": "jormund_the_wall",
+      "name": "Jormund, The Wall",
+      "type": "unit",
+      "faction": "Dwarves",
+      "image": "assets/cards/dwarves/jormund_the_wall.png"
+    },
+    {
+      "id": "excavaters_intuition",
+      "name": "Excavater's Intuition",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/excavaters_intuition.png"
+    },
+    {
+      "id": "war_paint",
+      "name": "War-Paint",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/war_paint.png"
+    },
+    {
+      "id": "mind_fog",
+      "name": "Mind-Fog",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/mind_fog.png"
+    },
+    {
+      "id": "wildfires",
+      "name": "Wildfires",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/wildfires.png"
+    },
+    {
+      "id": "supply_convoy",
+      "name": "Supply Convoy",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/supply_convoy.png"
+    },
+    {
+      "id": "cursed_mists",
+      "name": "Cursed Mists",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/cursed_mists.png"
+    },
+    {
+      "id": "rain_of_volleys",
+      "name": "Rain of Volleys",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/rain_of_volleys.png"
+    },
+    {
+      "id": "transmute",
+      "name": "Transmute",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/transmute.png"
+    },
+    {
+      "id": "overrun",
+      "name": "Overrun",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/overrun.png"
+    },
+    {
+      "id": "chain_down",
+      "name": "Chain Down",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/chain_down.png"
+    },
+    {
+      "id": "fog_of_war",
+      "name": "Fog of War",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/fog_of_war.png"
+    },
+    {
+      "id": "harvest",
+      "name": "Harvest",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/harvest.png"
+    },
+    {
+      "id": "battle_siren",
+      "name": "Battle Siren",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/battle_siren.png"
+    },
+    {
+      "id": "calamity",
+      "name": "Calamity",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/calamity.png"
+    },
+    {
+      "id": "order_of_the_elven_empire",
+      "name": "Order of the Elven Empire",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/order_of_the_elven_empire.png"
+    },
+    {
+      "id": "brugos_accord",
+      "name": "Brugo's Accord",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/brugos_accord.png"
+    },
+    {
+      "id": "contract_of_the_assasins_guild",
+      "name": "Contract of the Assasin's Guild",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/contract_of_the_assasins_guild.png"
+    },
+    {
+      "id": "the_plight_of_rykard",
+      "name": "The Plight of Rykard",
+      "type": "eventTrap",
+      "faction": "Event/Traps",
+      "image": "assets/cards/events/the_plight_of_rykard.png"
+    },
+    {
+      "id": "vaelori_longbow",
+      "name": "Vaelori Longbow (W)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/vaelori_longbow.png"
+    },
+    {
+      "id": "grave_crossers_pack",
+      "name": "Grave-Crosser’s Pack (A)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/grave_crossers_pack.png"
+    },
+    {
+      "id": "elyndells_leather_cuirass",
+      "name": "Elyndell's Leather Cuirass (A)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/elyndells_leather_cuirass.png"
+    },
+    {
+      "id": "dwarven_spear",
+      "name": "Dwarven Spear (W)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/dwarven_spear.png"
+    },
+    {
+      "id": "orkhael_serrated_shortsword",
+      "name": "Orkhael Serrated Shortsword (W)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/orkhael_serrated_shortsword.png"
+    },
+    {
+      "id": "cloak_of_secrecy",
+      "name": "Cloak of Secrecy (A)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/cloak_of_secrecy.png"
+    },
+    {
+      "id": "consortium_ledger",
+      "name": "Consortium Ledger (W)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/consortium_ledger.png"
+    },
+    {
+      "id": "bracers_of_the_depth",
+      "name": "Bracers of the Depth (A)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/bracers_of_the_depth.png"
+    },
+    {
+      "id": "lunareths_pendant",
+      "name": "Lunareth’s Pendant (A)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/lunareths_pendant.png"
+    },
+    {
+      "id": "banner_of_expansion",
+      "name": "Banner of Expansion (A)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/banner_of_expansion.png"
+    },
+    {
+      "id": "shatter_maul",
+      "name": "Shatter-Maul (W)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/shatter_maul.png"
+    },
+    {
+      "id": "lockdown_shackles",
+      "name": "Lockdown Shackles (W)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/lockdown_shackles.png"
+    },
+    {
+      "id": "jormunds_breastplate",
+      "name": "Jormund's Breastplate (A)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/jormunds_breastplate.png"
+    },
+    {
+      "id": "noxs_heirloom",
+      "name": "Nox's heirloom (W)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/noxs_heirloom.png"
+    },
+    {
+      "id": "marshals_flameblade",
+      "name": "Marshal's Flameblade (W)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/marshals_flameblade.png"
+    },
+    {
+      "id": "gorthaks_cleaver",
+      "name": "Gorthak's Cleaver (W)",
+      "type": "equipment",
+      "faction": "Equipment",
+      "image": "assets/cards/equipment/gorthaks_cleaver.png"
+    }
+  ]
+}

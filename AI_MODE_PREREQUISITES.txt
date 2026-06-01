@@ -1,0 +1,17 @@
+LEGIONS OF VALOR - AI MODE PREREQUISITES
+
+Play vs AI is local-only in this build.
+It does NOT need:
+- Firebase Console open
+- a second laptop
+- internet
+- Python
+- Node/npm
+
+It DOES need:
+- Microsoft Edge or another modern browser
+- the local runner window kept open
+- JavaScript enabled in the browser
+
+Online 1v1 still needs Firebase Realtime Database + Anonymous Auth.
+AI mode is separate and runs fully in the browser tab.

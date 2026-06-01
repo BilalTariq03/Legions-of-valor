@@ -1,0 +1,9 @@
+Legions of Valor - Ready/Start Fix
+
+Changes in this version:
+- Adds cache-busting and no-cache server headers so Edge does not keep older JavaScript.
+- Makes the Ready button read the latest lobby state instead of relying on stale HTML data.
+- Adds a Backup Start Duel Now button in the lobby. If both players are seated and have chosen factions, this can start the duel even if one ready click fails during LAN testing.
+- Keeps Firebase config already installed.
+
+Use a NEW room after extracting this version. Close old server windows first.

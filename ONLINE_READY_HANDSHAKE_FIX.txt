@@ -1,0 +1,25 @@
+LEGIONS OF VALOR — ONLINE READY HANDSHAKE FIX
+Date: 2026-06-01
+
+Problem fixed:
+- One player could ready up and it would appear on the other screen.
+- As soon as the second player clicked Ready, the lobby broke and the game did not start.
+- The Ready button could stay visually stuck and not return to Unready/Ready.
+
+Cause:
+- The second Ready click was also trying to start the whole duel in the same Firebase write.
+- Starting the duel creates full shuffled decks and a much larger game state.
+- If that heavier write stalled, the button looked stuck and the lobby never cleanly updated.
+
+Fix:
+- Ready now only updates the small lobby ready flag.
+- Once both ready flags are visible from Firebase, Player 1 automatically starts the duel as a separate action.
+- This makes ready/unready reliable first, then starts the game cleanly.
+- Added a 15-second UI timeout so a Ready button cannot stay stuck forever.
+- Kept the dropdown/button re-render protection from the previous UI stability fix.
+
+Testing instruction:
+- Close old game tabs and old runner windows.
+- Extract this build fresh.
+- Use a new room code.
+- Do not reuse rooms made in older builds.

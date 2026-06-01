@@ -1,0 +1,1 @@
+This build changes online lobby Ready/Start/Faction/Deck actions to write only /gameState in Firebase, avoiding the previous Readying freeze. Create a NEW room after extracting this build. Close old server windows and clear old tabs.

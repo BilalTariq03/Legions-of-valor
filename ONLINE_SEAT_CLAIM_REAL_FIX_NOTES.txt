@@ -1,0 +1,15 @@
+Legions of Valor - Online Seat Claim Real Fix
+
+Problem fixed:
+- Player 2 joined the room but both laptops still showed P2 as an Empty Seat.
+- The Ready button was missing for Player 2 because p2.uid was not being saved.
+
+Root cause:
+- The CLAIM_SEAT reducer was using the action's seat hint as if it proved the player already owned that seat.
+- When Player 2 joined, the code saw seat='p2', treated it like a reconnect, and updated only name/connected.
+- It did not write p2.uid, so Firebase still stored P2 as empty.
+
+Fix:
+- CLAIM_SEAT now checks only the real saved UID using findSeatByUid().
+- If p2.uid is empty, it writes Player 2's Firebase Anonymous Auth UID properly.
+- This should restore Player 2 name display, faction controls, deck controls, Ready button, and synced game start.

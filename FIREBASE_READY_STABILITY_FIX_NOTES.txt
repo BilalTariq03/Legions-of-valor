@@ -1,0 +1,11 @@
+Legions of Valor - Firebase Ready/Stability Fix
+
+This version fixes the lobby getting stuck on 'Readying...' by replacing the generic Firebase transaction write with a simpler read -> rules reduce -> write cycle plus a timeout. This is more reliable for the current beginner browser prototype and easier to debug on Edge + local LAN testing.
+
+Also changed:
+- Ready and Start Duel buttons no longer stay visually stuck if Firebase rejects or times out.
+- Force start no longer fails just because anonymous auth UID changed after browser/cache changes.
+- Firebase data is sanitized more strictly before writing.
+- Error messages stay on screen longer.
+
+This is still a browser MVP. For a production anti-cheat version, move game authority to a server/Cloud Functions later.

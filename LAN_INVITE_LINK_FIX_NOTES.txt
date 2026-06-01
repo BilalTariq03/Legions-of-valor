@@ -1,0 +1,39 @@
+LEGIONS OF VALOR - LAN INVITE LINK FIX
+======================================
+
+What changed in this version:
+
+1) The Join Duel input now accepts either:
+   - a short room code, for example: MDCEP
+   - a full invite link, for example: http://192.168.1.25:5173/?room=MDCEP
+
+2) The Join Duel input is no longer limited to 8 characters, so long links fit better.
+
+3) The lobby now shows a readonly Invite Link field. Clicking Copy Invite Link copies that exact link.
+
+4) The No-Python runner now opens the game through your same-Wi-Fi IP address when possible, not localhost.
+   This means Copy Invite Link should copy something like:
+   http://192.168.1.25:5173/?room=MDCEP
+   instead of:
+   http://localhost:5173/?room=MDCEP
+
+How to test with two laptops on the same Wi-Fi:
+
+1) On Laptop 1, run:
+   CLICK_ME_RUN_GAME_NO_PYTHON.bat
+
+2) Keep the PowerShell/server window open.
+
+3) If Windows Firewall asks, click Allow access, especially for Private networks.
+
+4) Create a room on Laptop 1.
+
+5) Click Copy Invite Link.
+
+6) Send/paste that link into Laptop 2's Microsoft Edge.
+
+7) Laptop 2 can also paste the whole link into the Join Duel input, or just type the room code.
+
+Important:
+- Same-Wi-Fi links use private addresses like 192.168.x.x and only work while both laptops are on the same network.
+- For true worldwide play, deploy the game online later through Firebase Hosting, Netlify, or GitHub Pages.
