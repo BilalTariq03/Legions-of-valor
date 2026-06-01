@@ -50,7 +50,7 @@ export function friendlyHasAbility(player, abilityName) {
 
 export function laneIsLockedByEnemy(state, playerKey, lane) {
   const enemy = state.players[otherPlayer(playerKey)];
-  const enemyUnit = enemy.board.lanes[lane].unit;
+  const enemyUnit = enemy.board?.lanes?.[lane]?.unit;
   return hasAbility(enemyUnit, 'Lockdown');
 }
 
@@ -73,7 +73,7 @@ export function effectivePlayCost(state, playerKey, card, lane = null) {
 }
 
 export function faceDownCost(player) {
-  const activeBackrow = CONFIG.LANES.filter(lane => player.board.backrow[lane]).length;
+  const activeBackrow = CONFIG.LANES.filter(lane => player.board?.backrow?.[lane]).length;
   return 1 + activeBackrow;
 }
 
@@ -100,7 +100,7 @@ export function equipmentApBonus(unit, mode) {
 
 export function calculateAP(state, ownerKey, lane, mode = 'neutral') {
   const player = state.players[ownerKey];
-  const unit = player.board.lanes[lane].unit;
+  const unit = player.board?.lanes?.[lane]?.unit;
   if (!unit) return 0;
   let ap = unit.ap || 0;
   ap += unit.temp?.apMod || 0;
@@ -491,7 +491,7 @@ export function checkBattleplanObjective(state, playerKey) {
   if (id === 'tactical_reserve') return player.mana >= 3;
   if (id === 'the_grand_ruse') return !!player.turnFlags.ruseSucceeded;
   if (id === 'high_command') return !!player.turnFlags.deployedElite;
-  if (id === 'total_war') return CONFIG.LANES.every(lane => player.turnFlags.attacksDeclaredByLane.includes(lane));
+  if (id === 'total_war') return CONFIG.LANES.every(lane => (player.turnFlags.attacksDeclaredByLane || []).includes(lane));
   if (id === 'last_stand') return !player.turnFlags.lostUnitThisTurn;
   return false;
 }

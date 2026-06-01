@@ -255,6 +255,7 @@ function renderSelectionActions(state, mySeat, card, selectedUnit, uiState) {
     return `<div class="card-preview">
       <h2 class="panel-title">Selected Unit</h2>
       ${renderCard(selectedUnit, { preview: true })}
+      <p class="small-note">${escapeHtml(selectedUnit.description || abilityList(selectedUnit))}</p>
       <p class="small-note">Current AP: ${calculateAP(state, mySeat, lane, 'neutral')}</p>
       ${state.phase === 'conflict' ? `<div class="action-grid compact">${attackButtons}${abilityButtons}</div>` : '<p class="small-note">Units attack during Conflict.</p>'}
     </div>`;

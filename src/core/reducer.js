@@ -216,7 +216,7 @@ function playUnit(state, action, uid) {
   if (!card || card.type !== 'unit') return errorState(state, 'Select a unit card from your hand.');
   const lane = action.lane;
   if (!CONFIG.LANES.includes(lane)) return errorState(state, 'Invalid lane.');
-  if (player.board.lanes[lane].unit) return errorState(state, 'That lane already has a unit.');
+  if (player.board?.lanes?.[lane]?.unit) return errorState(state, 'That lane already has a unit.');
   const cost = effectivePlayCost(state, seat, card, lane);
   if (player.mana < cost) return errorState(state, 'Not enough Mana.');
 
@@ -260,7 +260,7 @@ function setFaceDown(state, action, uid) {
   if (card.exposed) return errorState(state, 'Exposed cards cannot be set face-down again.');
   const lane = action.lane;
   if (!CONFIG.LANES.includes(lane)) return errorState(state, 'Invalid lane.');
-  if (player.board.backrow[lane]) return errorState(state, 'That Back Row slot is occupied.');
+  if (player.board?.backrow?.[lane]) return errorState(state, 'That Back Row slot is occupied.');
   const cost = faceDownCost(player);
   if (player.mana < cost) return errorState(state, 'Not enough Mana to set face-down.');
   const hidden = removeFromHand(player, card.instanceId);
@@ -318,7 +318,7 @@ function declareAttack(state, action, uid) {
   if (attackingUnit.temp.cannotAttack) return errorState(state, 'That unit cannot attack this turn.');
   if (!legalAttackTargets(attackingUnit, fromLane).includes(toLane)) return errorState(state, 'That unit cannot target that lane.');
 
-  attacker.turnFlags.attacksDeclaredByLane = [...new Set([...attacker.turnFlags.attacksDeclaredByLane, fromLane])];
+  attacker.turnFlags.attacksDeclaredByLane = [...new Set([...(attacker.turnFlags.attacksDeclaredByLane || []), fromLane])];
   attackingUnit.temp.hasAttacked = true;
 
   // Backrow interaction belongs to the defending player in the target lane.

@@ -128,6 +128,8 @@ export function buildSelectedDeck(faction, owner, deckChoiceId = null) {
 }
 
 export function drawCards(player, amount) {
+  player.deck = player.deck || [];
+  player.hand = player.hand || [];
   const drawn = [];
   for (let i = 0; i < amount; i++) {
     if (!player.deck.length) break;
@@ -139,8 +141,9 @@ export function drawCards(player, amount) {
 }
 
 export function resetBoardTemps(player) {
+  if (!player?.board?.lanes) return;
   for (const lane of CONFIG.LANES) {
-    const unit = player.board.lanes[lane].unit;
+    const unit = player.board.lanes[lane]?.unit;
     if (unit) unit.temp = freshUnitTemp();
   }
 }
