@@ -209,11 +209,11 @@ export function renderGame(room, uid, uiState) {
 
 function renderStats(me, enemy) {
   return `<div class="stat-grid" style="margin-top:12px;">
-    <div class="stat"><b>${me.aurion}</b><span>Your Aurion</span></div>
-    <div class="stat"><b>${enemy.aurion}</b><span>Enemy Aurion</span></div>
-    <div class="stat"><b>${me.mana}</b><span>Your Mana</span></div>
-    <div class="stat"><b>${me.deck.length}</b><span>Deck</span></div>
-    <div class="stat"><b>${me.discard.length}</b><span>Discard</span></div>
+    <div class="stat"><b>${me.aurion ?? 0}</b><span>Your Aurion</span></div>
+    <div class="stat"><b>${enemy.aurion ?? 0}</b><span>Enemy Aurion</span></div>
+    <div class="stat"><b>${me.mana ?? 0}</b><span>Your Mana</span></div>
+    <div class="stat"><b>${(me.deck ?? []).length}</b><span>Deck</span></div>
+    <div class="stat"><b>${(me.discard ?? []).length}</b><span>Discard</span></div>
     <div class="stat"><b>${countEquipment(me)}</b><span>Equipment Active</span></div>
   </div>`;
 }
@@ -265,8 +265,11 @@ function renderSelectionActions(state, mySeat, card, selectedUnit, uiState) {
 
 function renderPlayerStrip(player, hiddenHand = false) {
   return `<div class="player-strip">
-    <div><div class="player-name">${escapeHtml(player.name)}</div><div class="small-note">${player.faction || 'No faction'} · Deck ${player.deck.length} · Discard ${player.discard.length}</div></div>
-    <div class="opponent-hand">${Array.from({ length: hiddenHand ? player.hand.length : 0 }, () => '<div class="mini-back"></div>').join('')}</div>
+    <div>
+      <div class="player-name">${escapeHtml(player.name)}</div>
+      <div class="small-note">${player.faction || 'No faction'} · Deck ${(player.deck ?? []).length} · Discard ${(player.discard ?? []).length}</div>
+    </div>
+    <div class="opponent-hand">${Array.from({ length: hiddenHand ? (player.hand ?? []).length : 0 }, () => '<div class="mini-back"></div>').join('')}</div>
   </div>`;
 }
 
