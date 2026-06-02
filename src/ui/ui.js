@@ -177,6 +177,7 @@ export function renderGame(room, uid, uiState) {
         <div class="phase-pill">${state.phase.toUpperCase()} · Turn ${state.turnNumber}</div>
         <div class="turn-banner ${isMyTurn ? '' : 'waiting'}">${isMyTurn ? 'Your turn.' : (state.players[state.activePlayer]?.isBot ? `AI thinking: ${escapeHtml(state.players[state.activePlayer].name)}...` : `Waiting for ${escapeHtml(state.players[state.activePlayer].name)}...`)}</div>
         ${renderStats(me, enemy)}
+        ${renderTributePile(me, isMyTurn, state.phase)}
         ${renderBattleplan(me)}
         ${renderSelectionActions(state, mySeat, selectedCard, selectedUnit, uiState)}
         <div class="debug-panel">
@@ -228,6 +229,24 @@ function renderStats(me, enemy) {
   </div>`;
 }
 
+function renderTributePile(player, isMyTurn, phase) {
+  const count = (player.tribute ?? []).length;
+  const volatile = player.volatileTributeBonus ?? 0;
+  const total = count + volatile;
+  const canDrop = isMyTurn && phase === 'deployment';
+  return `<div class="tribute-zone ${canDrop ? 'tribute-droppable' : ''}"
+              data-drop-action="send-to-tribute"
+              data-drop-lane="tribute">
+    <div class="tribute-zone-label">Tribute Pile</div>
+    <div class="tribute-zone-count">
+      ${count} card${count !== 1 ? 's' : ''}
+      ${volatile > 0 ? `<span class="volatile-bonus">+${volatile} volatile</span>` : ''}
+    </div>
+    <div class="tribute-zone-total">${total} TP available</div>
+    ${canDrop ? '<div class="tribute-drop-hint">↓ Drag card here to tribute</div>' : ''}
+  </div>`;
+}
+
 function renderBattleplan(player) {
   const bp = player.currentBattleplan;
   if (!bp) return `<div class="action-box" style="margin-top:12px;"><b>Choosing Battleplan...</b></div>`;
@@ -246,12 +265,17 @@ function renderSelectionActions(state, mySeat, card, selectedUnit, uiState) {
   if (card) {
     const laneButtons = CONFIG.LANES.map(l => `<button data-action="${card.type === 'unit' ? 'play-unit' : card.type === 'equipment' ? 'play-equipment' : 'play-event'}" data-card-id="${card.instanceId}" data-lane="${l}">${titleCaseLane(l)}</button>`).join('');
     const setButtons = CONFIG.LANES.map(l => `<button data-action="set-facedown" data-card-id="${card.instanceId}" data-lane="${l}">Set ${titleCaseLane(l)}</button>`).join('');
-    const tributeButton = `<button data-action="tribute-card" data-card-id="${card.instanceId}">Send to Tribute${card.type === 'eventTrap' ? ' (+1 perm, +2 volatile)' : ' (+1 TP permanent)'}</button>`;
+    const tributeButton = state.phase === 'deployment'
+      ? `<button data-action="send-to-tribute" data-card-id="${card.instanceId}"
+           style="margin-top:6px; width:100%; background:rgba(100,60,10,0.6); border-color:#8b6914;">
+           ⬇ Send to Tribute Pile${card.type === 'eventTrap' ? ' (+1 perm, +2 volatile)' : ' (+1 TP permanent)'}
+         </button>`
+      : '';
     return `<div class="card-preview">
       <h2 class="panel-title">Selected Card</h2>
       ${renderCard(card, { preview: true })}
       ${renderAbilityBreakdown(card)}
-      ${state.phase === 'deployment' ? `<div class="action-grid compact" style="margin-top:10px;">${laneButtons}${setButtons}${tributeButton}</div>` : '<p class="small-note">Cards can be played during Deployment.</p>'}
+      ${state.phase === 'deployment' ? `<div class="action-grid compact" style="margin-top:10px;">${laneButtons}${setButtons}</div>${tributeButton}` : '<p class="small-note">Cards can be played during Deployment.</p>'}
     </div>`;
   }
 
@@ -289,7 +313,8 @@ function renderLaneRow(state, seat, opponent, uiState) {
   return `<div class="lane-zone">${CONFIG.LANES.map(lane => {
     const unit = state.players[seat]?.board?.lanes?.[lane]?.unit ?? null;
     const ap = unit ? calculateAP(state, seat, lane, opponent ? 'defense' : 'neutral') : 0;
-    return `<div class="lane" data-label="${opponent ? 'Enemy' : 'Your'} ${titleCaseLane(lane)}">
+    const dropAttrs = !opponent ? `data-drop-lane="${lane}" data-drop-action="play-unit"` : '';
+    return `<div class="lane${!opponent ? ' drop-target' : ''}" data-label="${opponent ? 'Enemy' : 'Your'} ${titleCaseLane(lane)}" ${dropAttrs}>
       ${unit ? renderCard(unit, { board: true, lane, owner: seat, selected: !opponent && uiState.selectedUnitLane === lane, ap, clickable: !opponent }) : '<span class="empty-slot">Empty lane</span>'}
     </div>`;
   }).join('')}</div>`;
@@ -298,7 +323,8 @@ function renderLaneRow(state, seat, opponent, uiState) {
 function renderBackrow(state, seat, opponent) {
   return `<div class="backrow-zone">${CONFIG.LANES.map(lane => {
     const back = state.players[seat]?.board?.backrow?.[lane] ?? null;
-    return `<div class="back-slot" data-label="${opponent ? 'Enemy' : 'Your'} Back Row ${titleCaseLane(lane)}">
+    const dropAttrs = !opponent ? `data-drop-lane="${lane}" data-drop-action="set-facedown"` : '';
+    return `<div class="back-slot${!opponent ? ' drop-target' : ''}" data-label="${opponent ? 'Enemy' : 'Your'} Back Row ${titleCaseLane(lane)}" ${dropAttrs}>
       ${back ? (opponent ? '<div class="face-down-card">Hidden</div>' : renderFaceDown(back)) : '<span class="empty-slot">Empty back row</span>'}
     </div>`;
   }).join('')}</div>`;
@@ -314,11 +340,12 @@ export function renderCard(card, opts = {}) {
   const selected = opts.selected ? 'selected' : '';
   const handClass = opts.hand ? 'hand-card' : '';
   const actionAttrs = opts.hand ? `data-action="select-card" data-card-id="${card.instanceId}"` : (opts.board && opts.clickable ? `data-action="select-unit" data-lane="${opts.lane}"` : '');
+  const draggableAttr = opts.hand ? `draggable="true" data-draggable-card="${card.instanceId}"` : '';
   const stats = card.type === 'unit'
     ? `<span class="gem">${card.cost} TP</span><span class="gem">${opts.ap ?? card.ap} AP</span><span class="gem">${card.dp} DP</span>`
     : `<span class="gem">${card.cost} TP</span><span class="gem">${card.dp} DP</span>`;
   const equipment = card.equipment ? `<div class="equipment-tags">${card.equipment.weapon ? `<span class="equip-tag">W</span>` : ''}${card.equipment.armor ? `<span class="equip-tag">A</span>` : ''}</div>` : '';
-  return `<div class="card ${typeClass} ${factionClass} ${selected} ${handClass}" ${actionAttrs} title="${escapeAttr(card.name)}">
+  return `<div class="card ${typeClass} ${factionClass} ${selected} ${handClass}" ${actionAttrs} ${draggableAttr} title="${escapeAttr(card.name)}">
     <div class="card-name">${escapeHtml(card.name)} ${card.elite ? '<span class="elite-mark">★</span>' : ''}</div>
     <div class="card-art" style="--image:url('${card.image}')">${escapeHtml(card.faction)}</div>
     <div class="card-text">${escapeHtml(abilityList(card))}</div>

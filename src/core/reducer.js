@@ -31,6 +31,7 @@ export function reduceGameState(inputState, action, actorUid) {
       case 'PLAY_EQUIPMENT': result = playEquipment(state, action, actorUid); break;
       case 'PLAY_EVENT': result = playEvent(state, action, actorUid); break;
       case 'TRIBUTE_CARD': result = tributeCard(state, action, actorUid); break;
+      case 'SEND_TO_TRIBUTE': result = sendToTribute(state, action, actorUid); break;
       case 'SET_FACE_DOWN': result = setFaceDown(state, action, actorUid); break;
       case 'END_DEPLOYMENT': result = endDeployment(state, action, actorUid); break;
       case 'DECLARE_ATTACK': result = declareAttack(state, action, actorUid); break;
@@ -192,6 +193,11 @@ function selectBattleplan(state, action, uid) {
   const player = state.players[seat];
   if (state.phase !== 'strategy' || state.pendingAction?.type !== 'chooseBattleplan') return errorState(state, 'No Battleplan choice is pending.');
   if (state.pendingAction.player !== seat) return errorState(state, 'It is not your turn to choose a Battleplan.');
+  if (player.volatileTributeExpiresTurn && state.turnNumber >= player.volatileTributeExpiresTurn) {
+    player.volatileTributeBonus = 0;
+    player.volatileTributeExpiresTurn = null;
+    addLog(state, `${player.name}'s Volatile Tribute bonus has expired.`);
+  }
   const chosen = player.battleplanChoices.find(bp => bp.id === action.battleplanId);
   if (!chosen) return errorState(state, 'Invalid Battleplan.');
 
@@ -333,6 +339,27 @@ function tributeCard(state, action, uid) {
   return state;
 }
 
+function sendToTribute(state, action, uid) {
+  const seat = requireTurn(state, uid);
+  if (state.phase !== 'deployment')
+    return errorState(state, 'You can only send cards to Tribute during Deployment.');
+  const player = state.players[seat];
+  const card = player.hand.find(c => c.instanceId === action.cardId);
+  if (!card) return errorState(state, 'Card not found in hand.');
+  removeFromHand(player, card.instanceId);
+  player.tribute = player.tribute ?? [];
+  player.tribute.push(card);
+  const isSpell = card.type === 'eventTrap';
+  if (isSpell) {
+    player.volatileTributeBonus = (player.volatileTributeBonus ?? 0) + 2;
+    player.volatileTributeExpiresTurn = state.turnNumber + 1;
+    addLog(state, `${player.name} placed ${card.name} (Spell) into Tribute. +1 TP permanent, +2 TP this turn.`);
+  } else {
+    addLog(state, `${player.name} sent ${card.name} to Tribute (+1 TP permanent).`);
+  }
+  return state;
+}
+
 function endDeployment(state, action, uid) {
   const seat = requireTurn(state, uid);
   if (state.phase !== 'deployment') return errorState(state, 'Not in Deployment.');
@@ -394,8 +421,7 @@ function declareAttack(state, action, uid) {
 
   const defendingUnit = defender.board.lanes[toLane]?.unit;
   if (!defendingUnit) {
-    triggerMonarchStrike(state, seat, attackingUnit);
-    addLog(state, `${attackingUnit.name} made a Monarch Strike into ${titleCaseLane(toLane)}.`);
+    triggerMonarchStrike(state, seat, toLane, attackingUnit);
     checkWinner(state);
     return state;
   }
@@ -405,8 +431,7 @@ function declareAttack(state, action, uid) {
     defender.board.lanes[toLane].unit = null;
     defender.hand.push(defendingUnit);
     addLog(state, `${defendingUnit.name} used Vanish and escaped to ${defender.name}'s hand.`);
-    triggerMonarchStrike(state, seat, attackingUnit);
-    addLog(state, `${attackingUnit.name} made a Monarch Strike into the vacated ${titleCaseLane(toLane)}.`);
+    triggerMonarchStrike(state, seat, toLane, attackingUnit);
     checkWinner(state);
     return state;
   }
@@ -668,6 +693,12 @@ function endConflict(state, action, uid) {
   state.turnNumber += 1;
   // Clear volatile tribute earned this turn — it doesn't carry over.
   state.players[seat].volatileTributeBonus = 0;
+  // Expire volatile TP for the incoming player if their bonus was from a prior turn.
+  const nextPlayer = state.players[next];
+  if (nextPlayer.volatileTributeExpiresTurn && state.turnNumber >= nextPlayer.volatileTributeExpiresTurn) {
+    nextPlayer.volatileTributeBonus = 0;
+    nextPlayer.volatileTributeExpiresTurn = null;
+  }
   state.players[seat].turnFlags = freshTurnFlags();
   state.players[next].turnFlags = freshTurnFlags();
   resetTurnTemporaryEffects(state);

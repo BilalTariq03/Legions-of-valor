@@ -164,6 +164,16 @@ function chooseDeploymentAction(state, difficulty) {
     if (equip && target) return { type: 'PLAY_EQUIPMENT', cardId: equip.instanceId, lane: target.lane };
   }
 
+  // 2b) If no affordable units exist, send the lowest-value card to Tribute to
+  //     build up TP so a unit can be deployed on a future action.
+  const affordable = bot.hand.filter(c => c.type === 'unit' && tributeAvailable(bot) >= (c.cost || 0));
+  if (!affordable.length && bot.hand.length > 0) {
+    const candidate = bot.hand
+      .filter(c => c.type !== 'unit' || tributeAvailable(bot) < (c.cost || 0))
+      .sort((a, b) => (a.cost || 0) - (b.cost || 0))[0];
+    if (candidate) return { type: 'SEND_TO_TRIBUTE', cardId: candidate.instanceId };
+  }
+
   // 3) Normal/Hard bots may set one event/trap face-down as pressure.
   if (label !== 'easy') {
     const openBackrow = CONFIG.LANES.find(lane => !bot.board.backrow[lane]);

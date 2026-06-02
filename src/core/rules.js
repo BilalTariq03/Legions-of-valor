@@ -319,12 +319,13 @@ export function triggerOnWinAbilities(state, winnerKey, winningUnit, losingPlaye
   }
 }
 
-export function triggerMonarchStrike(state, attackerKey, attackerUnit) {
+export function triggerMonarchStrike(state, attackerKey, lane, attackerUnit) {
   const attacker = state.players[attackerKey];
   const defender = state.players[otherPlayer(attackerKey)];
   if (CONFIG.MONARCH_STRIKE_AURION_REWARD > 0) {
     attacker.aurion += CONFIG.MONARCH_STRIKE_AURION_REWARD;
   }
+  addLog(state, `${attackerUnit.name} made a Monarch Strike into ${titleCaseLane(lane)}. +${CONFIG.MONARCH_STRIKE_AURION_REWARD} Aurion.`);
   if (hasAbility(attackerUnit, 'Shatter')) {
     const discarded = randomDiscard(defender);
     if (discarded) addLog(state, `${attackerUnit.name}'s Shatter discarded ${discarded.name}.`);

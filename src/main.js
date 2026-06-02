@@ -151,7 +151,21 @@ async function dispatch(action) {
   // split-brain states where Player 1 saw the game start but Player 2 stayed in
   // lobby. Every online action now reads the latest Firebase room, applies the
   // rule, writes it, then the listener/poller updates both laptops.
-  return await dispatchRoomAction(uiState.roomCode, enrichedAction, actorUid);
+  const result = await dispatchRoomAction(uiState.roomCode, enrichedAction, actorUid);
+  // Part A: auto-clear selection after every successful action so the bot's
+  // turn starts with a clean slate and does not rely on a Clear Selection click.
+  uiState.selectedCardId = null;
+  uiState.selectedUnitLane = null;
+  // Part B: re-trigger the bot after any player action in case Firebase has not
+  // yet fired its listener callback (avoids the bot appearing frozen).
+  setTimeout(() => {
+    if (uiState.room) {
+      maybeRunBot(uiState.room, uiState.roomCode, async (botAction) => {
+        return await dispatchRoomAction(uiState.roomCode, botAction, BOT_UID);
+      });
+    }
+  }, 300);
+  return result;
 }
 function inputValue(id, fallback = '') {
   return document.getElementById(id)?.value?.trim() || fallback;
@@ -375,8 +389,18 @@ document.addEventListener('click', async (event) => {
       return;
     }
     if (action === 'clear-selection') {
-      uiState.selectedCardId = null; uiState.selectedUnitLane = null; window.__lovParrySelection = [];
+      uiState.selectedCardId = null;
+      uiState.selectedUnitLane = null;
+      window.__lovParrySelection = [];
+      clearRoomRenderCache();
       render();
+      setTimeout(() => {
+        if (uiState.room) {
+          maybeRunBot(uiState.room, uiState.roomCode, async (botAction) => {
+            return await dispatchRoomAction(uiState.roomCode, botAction, BOT_UID);
+          });
+        }
+      }, 150);
       return;
     }
     if (action === 'select-battleplan') {
@@ -401,6 +425,11 @@ document.addEventListener('click', async (event) => {
     if (action === 'tribute-card') {
       await dispatch({ type: 'TRIBUTE_CARD', cardId: el.dataset.cardId });
       uiState.selectedCardId = null;
+      return;
+    }
+    if (action === 'send-to-tribute') {
+      const cardId = el.dataset.cardId;
+      await dispatch({ type: 'SEND_TO_TRIBUTE', cardId });
       return;
     }
     if (action === 'set-facedown') {
@@ -491,6 +520,75 @@ document.addEventListener('change', async (event) => {
   }
 });
 
+
+document.addEventListener('dragstart', (e) => {
+  const card = e.target.closest('[data-draggable-card]');
+  if (!card) return;
+  const cardId = card.dataset.draggableCard;
+  e.dataTransfer.setData('text/plain', cardId);
+  e.dataTransfer.effectAllowed = 'move';
+  uiState.selectedCardId = cardId;
+  uiState.selectedUnitLane = null;
+  card.classList.add('dragging');
+});
+
+document.addEventListener('dragend', () => {
+  document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+});
+
+document.addEventListener('dragover', (e) => {
+  const target = e.target.closest('[data-drop-lane]');
+  if (!target) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  target.classList.add('drag-over');
+});
+
+document.addEventListener('dragleave', (e) => {
+  const target = e.target.closest('[data-drop-lane]');
+  if (target && !target.contains(e.relatedTarget)) {
+    target.classList.remove('drag-over');
+  }
+});
+
+document.addEventListener('drop', async (e) => {
+  e.preventDefault();
+  const target = e.target.closest('[data-drop-lane]');
+  if (!target) return;
+  target.classList.remove('drag-over');
+
+  const cardId = e.dataTransfer.getData('text/plain');
+  const lane = target.dataset.dropLane;
+  const dropAction = target.dataset.dropAction;
+  if (!cardId || !lane) return;
+
+  const state = uiState.room?.gameState;
+  const mySeat = currentSeatForState(state);
+  if (!mySeat) return;
+  const me = state?.players[mySeat];
+  const card = me?.hand?.find(c => c.instanceId === cardId);
+  if (!card) return;
+
+  try {
+    if (dropAction === 'send-to-tribute') {
+      await dispatch({ type: 'SEND_TO_TRIBUTE', cardId });
+    } else if (dropAction === 'play-unit' && card.type === 'unit') {
+      await dispatch({ type: 'PLAY_UNIT', cardId, lane });
+    } else if (dropAction === 'play-unit' && card.type === 'equipment') {
+      await dispatch({ type: 'PLAY_EQUIPMENT', cardId, lane });
+    } else if (dropAction === 'play-unit' && card.type === 'eventTrap') {
+      await dispatch({ type: 'PLAY_EVENT', cardId, targetLane: lane });
+    } else if (dropAction === 'set-facedown') {
+      await dispatch({ type: 'SET_FACE_DOWN', cardId, lane });
+    }
+    uiState.selectedCardId = null;
+  } catch (err) {
+    console.error('Drop action failed:', err);
+    toast(err.message || 'Could not place card there.');
+  }
+});
 
 function ensureBuilderState() {
   if (!window.__lovDeckBuilder) {

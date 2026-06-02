@@ -526,3 +526,64 @@ select:focus {
   border-color: rgba(248,221,146,.85);
   box-shadow: 0 0 0 2px rgba(216,167,58,.18);
 }
+
+/* Drag and drop */
+.card[draggable="true"] { cursor: grab; }
+.card[draggable="true"]:active { cursor: grabbing; }
+.card.dragging { opacity: 0.4; transform: scale(0.95); }
+.drop-target { transition: background 0.15s, border-color 0.15s; }
+.drop-target.drag-over {
+  background: rgba(201, 168, 76, 0.15) !important;
+  border: 2px dashed var(--gold, #c9a84c) !important;
+  box-shadow: inset 0 0 12px rgba(201, 168, 76, 0.2);
+}
+.drop-target.drag-over .empty-slot { color: var(--gold, #c9a84c); }
+
+/* Tribute zone */
+.tribute-zone {
+  background: rgba(80, 40, 5, 0.4);
+  border: 1px solid rgba(139, 105, 20, 0.4);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 8px 0;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.tribute-zone.tribute-droppable {
+  border-style: dashed;
+  border-color: rgba(201, 168, 76, 0.5);
+  cursor: copy;
+}
+.tribute-zone.drag-over {
+  background: rgba(201, 168, 76, 0.15) !important;
+  border-color: var(--gold, #c9a84c) !important;
+  box-shadow: inset 0 0 12px rgba(201, 168, 76, 0.25);
+}
+.tribute-zone-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted, #aaa);
+  margin-bottom: 4px;
+}
+.tribute-zone-count {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--text, #eee);
+}
+.volatile-bonus {
+  color: #e8a020;
+  font-size: 0.78rem;
+  margin-left: 6px;
+}
+.tribute-zone-total {
+  font-size: 0.82rem;
+  color: var(--gold, #c9a84c);
+  margin-top: 2px;
+}
+.tribute-drop-hint {
+  font-size: 0.72rem;
+  color: var(--muted, #aaa);
+  margin-top: 5px;
+  font-style: italic;
+}
