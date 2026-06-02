@@ -70,11 +70,16 @@ export function renderTitle({ configured, roomFromUrl }) {
           </div>
           <div class="action-box deck-builder-box">
             <h2>Deck Builder</h2>
-            <p class="small-note">Build and save custom ${DECK_SIZE}-card decks in this browser. Saved decks appear in the deck selectors.</p>
+            <p class="small-note">Build and save custom ${DECK_SIZE}-card decks combining up to 2 races. Saved decks appear in the deck selectors.</p>
             <div class="stack">
               <input id="builderDeckName" placeholder="Deck name" maxlength="32" />
-              <label class="small-note">Deck faction</label>
+              <label class="small-note">Primary faction</label>
               <select id="builderFaction" data-action="builder-refresh">${FACTIONS.map(f => `<option value="${f}">${f}</option>`).join('')}</select>
+              <label class="small-note">Secondary faction (optional)</label>
+              <select id="builderFaction2" data-action="builder-refresh2">
+                <option value="">None (single-race deck)</option>
+                ${FACTIONS.map(f => `<option value="${f}">${f}</option>`).join('')}
+              </select>
               <div id="builderCount" class="small-note">0 / ${DECK_SIZE} cards</div>
               <div class="action-grid compact"><button data-action="builder-save">Save Custom Deck</button><button data-action="builder-clear">Clear</button></div>
               <div id="builderSelected" class="builder-list"></div>
@@ -211,7 +216,8 @@ function renderStats(me, enemy) {
   return `<div class="stat-grid" style="margin-top:12px;">
     <div class="stat"><b>${me.aurion ?? 0}</b><span>Your Aurion</span></div>
     <div class="stat"><b>${enemy.aurion ?? 0}</b><span>Enemy Aurion</span></div>
-    <div class="stat"><b>${me.mana ?? 0}</b><span>Your Mana</span></div>
+    <div class="stat"><b>${me.tp ?? 0}</b><span>Tribute (TP)</span></div>
+    <div class="stat"><b>${(me.tribute ?? []).length}</b><span>Tribute Pile</span></div>
     <div class="stat"><b>${(me.deck ?? []).length}</b><span>Deck</span></div>
     <div class="stat"><b>${(me.discard ?? []).length}</b><span>Discard</span></div>
     <div class="stat"><b>${countEquipment(me)}</b><span>Equipment Active</span></div>
@@ -236,11 +242,12 @@ function renderSelectionActions(state, mySeat, card, selectedUnit, uiState) {
   if (card) {
     const laneButtons = CONFIG.LANES.map(l => `<button data-action="${card.type === 'unit' ? 'play-unit' : card.type === 'equipment' ? 'play-equipment' : 'play-event'}" data-card-id="${card.instanceId}" data-lane="${l}">${titleCaseLane(l)}</button>`).join('');
     const setButtons = CONFIG.LANES.map(l => `<button data-action="set-facedown" data-card-id="${card.instanceId}" data-lane="${l}">Set ${titleCaseLane(l)}</button>`).join('');
+    const tributeButton = `<button data-action="tribute-card" data-card-id="${card.instanceId}">Send to Tribute${card.type === 'eventTrap' ? ' (+3 TP)' : ' (+1 TP)'}</button>`;
     return `<div class="card-preview">
       <h2 class="panel-title">Selected Card</h2>
       ${renderCard(card, { preview: true })}
-      <p class="small-note">${escapeHtml(card.description || abilityList(card))}</p>
-      ${state.phase === 'deployment' ? `<div class="action-grid compact" style="margin-top:10px;">${laneButtons}${setButtons}</div>` : '<p class="small-note">Cards can be played during Deployment.</p>'}
+      ${renderAbilityDescriptions(card)}
+      ${state.phase === 'deployment' ? `<div class="action-grid compact" style="margin-top:10px;">${laneButtons}${setButtons}${tributeButton}</div>` : '<p class="small-note">Cards can be played during Deployment.</p>'}
     </div>`;
   }
 
@@ -255,7 +262,7 @@ function renderSelectionActions(state, mySeat, card, selectedUnit, uiState) {
     return `<div class="card-preview">
       <h2 class="panel-title">Selected Unit</h2>
       ${renderCard(selectedUnit, { preview: true })}
-      <p class="small-note">${escapeHtml(selectedUnit.description || abilityList(selectedUnit))}</p>
+      ${renderAbilityDescriptions(selectedUnit)}
       <p class="small-note">Current AP: ${calculateAP(state, mySeat, lane, 'neutral')}</p>
       ${state.phase === 'conflict' ? `<div class="action-grid compact">${attackButtons}${abilityButtons}</div>` : '<p class="small-note">Units attack during Conflict.</p>'}
     </div>`;
@@ -323,8 +330,9 @@ function renderPendingModal(state, mySeat) {
     const choices = state.players[mySeat].battleplanChoices || [];
     return `<div class="modal-backdrop"><div class="modal-card">
       <h2 class="modal-title">Choose Your Battleplan</h2>
+      <p class="small-note">Pick any of the available battle plans. Draw cards and pursue the objective for bonus Aurion.</p>
       <div class="battleplan-grid">${choices.map(bp => `<div class="battleplan" data-action="select-battleplan" data-battleplan-id="${bp.id}">
-        <h3>${escapeHtml(bp.name)}</h3><p>Draw ${bp.draw} · Max ${bp.maxHand}</p><p>${escapeHtml(bp.tacticalObjective)}</p><b>Reward +${bp.reward} Aurion</b>
+        <h3>${escapeHtml(bp.name)}</h3><p>Draw ${bp.draw} · Max Hand ${bp.maxHand}</p><p>${escapeHtml(bp.tacticalObjective)}</p><b>Reward +${bp.reward} Aurion</b>
       </div>`).join('')}</div>
     </div></div>`;
   }
@@ -339,9 +347,14 @@ function renderPendingModal(state, mySeat) {
       const c = hand.find(x => x.instanceId === id);
       return sum + (c ? effectiveDp(c, parryPlayer) : 0);
     }, 0);
+    const attackingUnit = state.players[pending.attacker]?.board?.lanes?.[pending.fromLane]?.unit;
+    const attackerInfo = attackingUnit
+      ? `<b>${escapeHtml(attackingUnit.name)}</b> from the <b>${escapeHtml(titleCaseLane(pending.fromLane))} Lane</b> is attacking your <b>${escapeHtml(titleCaseLane(pending.toLane))} Lane</b>`
+      : `An attacker from <b>${escapeHtml(titleCaseLane(pending.fromLane))}</b> is targeting your <b>${escapeHtml(titleCaseLane(pending.toLane))}</b>`;
     return `<div class="modal-backdrop"><div class="modal-card">
       <h2 class="modal-title">Parry Chain</h2>
-      <p>Enemy attack AP: <b>${pending.attackAP}</b>. Your current defense value: <b>${pending.baseDefendAP}</b>. Selected DP: <b>${total}</b>.</p>
+      <p>${attackerInfo}.</p>
+      <p>Attack AP: <b>${pending.attackAP}</b> &nbsp;|&nbsp; Your defense: <b>${pending.baseDefendAP}</b> &nbsp;|&nbsp; Parry DP added: <b>${total}</b></p>
       <div class="parry-hand">${hand.map(card => renderCard(card, { hand: false, selected: selected.includes(card.instanceId) }).replace('class="card', `data-action="toggle-parry-card" data-card-id="${card.instanceId}" class="card hand-card`)).join('')}</div>
       <div class="action-grid compact"><button data-action="submit-parry">Confirm Parry</button><button data-action="decline-parry">Decline Parry</button></div>
     </div></div>`;
@@ -382,3 +395,19 @@ function findInHand(player, id) { return player.hand.find(c => c.instanceId === 
 function abilityList(card) { return (card.abilities || []).join(' · ') || card.description || 'No ability'; }
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function escapeAttr(s) { return escapeHtml(s).replace(/'/g, '&#039;'); }
+
+function renderAbilityDescriptions(card) {
+  const abilities = card.abilities || [];
+  const parts = [];
+  if (abilities.length > 0) {
+    for (const name of abilities) {
+      const text = abilityText(name);
+      parts.push(`<div class="ability-block"><b class="ability-name">${escapeHtml(name)}</b><p class="ability-desc">${escapeHtml(text)}</p></div>`);
+    }
+  }
+  if (card.description) {
+    parts.push(`<div class="ability-block"><b class="ability-name">Card Effect</b><p class="ability-desc">${escapeHtml(card.description)}</p></div>`);
+  }
+  if (parts.length === 0) return `<p class="small-note">No special abilities.</p>`;
+  return `<div class="ability-list">${parts.join('')}</div>`;
+}

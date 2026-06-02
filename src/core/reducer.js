@@ -29,6 +29,7 @@ export function reduceGameState(inputState, action, actorUid) {
       case 'PLAY_UNIT': result = playUnit(state, action, actorUid); break;
       case 'PLAY_EQUIPMENT': result = playEquipment(state, action, actorUid); break;
       case 'PLAY_EVENT': result = playEvent(state, action, actorUid); break;
+      case 'TRIBUTE_CARD': result = tributeCard(state, action, actorUid); break;
       case 'SET_FACE_DOWN': result = setFaceDown(state, action, actorUid); break;
       case 'END_DEPLOYMENT': result = endDeployment(state, action, actorUid); break;
       case 'DECLARE_ATTACK': result = declareAttack(state, action, actorUid); break;
@@ -190,11 +191,11 @@ function selectBattleplan(state, action, uid) {
   const chosen = player.battleplanChoices.find(bp => bp.id === action.battleplanId);
   if (!chosen) return errorState(state, 'Invalid Battleplan.');
 
-  const rejected = player.battleplanChoices.filter(bp => bp.id !== chosen.id);
-  player.battleplanDeck.push(...rejected);
+  // All plans stay in the deck; nothing is discarded.
   player.currentBattleplan = chosen;
   player.battleplanChoices = [];
-  player.mana = CONFIG.BASE_MANA_PER_TURN;
+  // TP resets to the current tribute pile size each turn.
+  player.tp = (player.tribute || []).length;
   player.turnFlags = freshTurnFlags();
   resetTurnTemporaryEffects(state);
 
@@ -218,10 +219,10 @@ function playUnit(state, action, uid) {
   if (!CONFIG.LANES.includes(lane)) return errorState(state, 'Invalid lane.');
   if (player.board?.lanes?.[lane]?.unit) return errorState(state, 'That lane already has a unit.');
   const cost = effectivePlayCost(state, seat, card, lane);
-  if (player.mana < cost) return errorState(state, 'Not enough Mana.');
+  if (player.tp < cost) return errorState(state, 'Not enough Tribute.');
 
   const unit = removeFromHand(player, card.instanceId);
-  player.mana -= cost;
+  player.tp -= cost;
   unit.temp = unit.temp || {};
   unit.equipment = unit.equipment || { weapon: null, armor: null };
   player.board.lanes[lane].unit = unit;
@@ -243,9 +244,9 @@ function playEquipment(state, action, uid) {
   if (!unit) return errorState(state, 'Choose a friendly unit to equip.');
   const slot = card.equipmentSlot || 'weapon';
   if (unit.equipment?.[slot]) return errorState(state, `That unit already has ${slot}.`);
-  if (player.mana < card.cost) return errorState(state, 'Not enough Mana.');
+  if (player.tp < card.cost) return errorState(state, 'Not enough Tribute.');
   const eq = removeFromHand(player, card.instanceId);
-  player.mana -= eq.cost;
+  player.tp -= eq.cost;
   unit.equipment[slot] = eq;
   addLog(state, `${player.name} equipped ${unit.name} with ${eq.name}.`);
   return state;
@@ -262,9 +263,9 @@ function setFaceDown(state, action, uid) {
   if (!CONFIG.LANES.includes(lane)) return errorState(state, 'Invalid lane.');
   if (player.board?.backrow?.[lane]) return errorState(state, 'That Back Row slot is occupied.');
   const cost = faceDownCost(player);
-  if (player.mana < cost) return errorState(state, 'Not enough Mana to set face-down.');
+  if (player.tp < cost) return errorState(state, 'Not enough Tribute to set face-down.');
   const hidden = removeFromHand(player, card.instanceId);
-  player.mana -= cost;
+  player.tp -= cost;
   player.board.backrow[lane] = {
     instanceId: hidden.instanceId,
     owner: seat,
@@ -282,13 +283,32 @@ function playEvent(state, action, uid) {
   const player = state.players[seat];
   const card = player.hand.find(c => c.instanceId === action.cardId);
   if (!card || card.type !== 'eventTrap') return errorState(state, 'Select an Event/Trap from your hand.');
-  if (player.mana < card.cost) return errorState(state, 'Not enough Mana.');
+  if (player.tp < card.cost) return errorState(state, 'Not enough Tribute.');
   const event = removeFromHand(player, card.instanceId);
-  player.mana -= event.cost;
+  player.tp -= event.cost;
   const ok = applyEventEffect(state, seat, event, action.targetLane);
   player.discard.push(event);
   if (!ok) return errorState(state, `${event.name} could not resolve.`);
   checkWinner(state);
+  return state;
+}
+
+function tributeCard(state, action, uid) {
+  const seat = requireTurn(state, uid);
+  if (state.phase !== 'deployment') return errorState(state, 'Cards can only be sent to Tribute during Deployment.');
+  const player = state.players[seat];
+  const card = player.hand.find(c => c.instanceId === action.cardId);
+  if (!card) return errorState(state, 'Select a card from your hand.');
+  const sacrificed = removeFromHand(player, card.instanceId);
+  player.tribute.push(sacrificed);
+  player.tp += 1;
+  if (sacrificed.type === 'eventTrap') {
+    // Spell cards give a volatile +2 TP this turn only (resets next turn).
+    player.tp += 2;
+    addLog(state, `${player.name} placed ${sacrificed.name} (Spell) into Tribute for +3 TP this turn.`);
+  } else {
+    addLog(state, `${player.name} sent ${sacrificed.name} to Tribute (+1 TP).`);
+  }
   return state;
 }
 
@@ -418,10 +438,10 @@ function submitParry(state, action, uid) {
     const card = used[i];
     removeFromHand(defender, card.instanceId);
     if (used.length === 1 && hasAbility(card, 'Logistics Shield')) {
-      // Only card in parry chain: add its DP to mana instead of discarding
-      defender.mana += card.dp || 0;
+      // Only card in parry chain: add its DP to tribute pool instead of discarding
+      defender.tp += card.dp || 0;
       defender.discard.push(card);
-      addLog(state, `${card.name}'s Logistics Shield added ${card.dp || 0} Mana.`);
+      addLog(state, `${card.name}'s Logistics Shield added ${card.dp || 0} Tribute.`);
     } else if (i === 1 && hasAbility(card, 'Chain-Link')) {
       // 2nd card in chain goes to Tribute
       defender.tribute.push(card);

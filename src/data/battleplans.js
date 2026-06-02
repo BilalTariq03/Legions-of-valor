@@ -46,7 +46,7 @@ export const BATTLEPLANS = [
     "name": "Tactical Reserve",
     "draw": 2,
     "maxHand": 8,
-    "tacticalObjective": "Logistics: End your turn with at least 3 Mana remaining.",
+    "tacticalObjective": "Logistics: End your turn with at least 3 Tribute remaining.",
     "reward": 2
   },
   {
@@ -62,7 +62,7 @@ export const BATTLEPLANS = [
     "name": "High Command",
     "draw": 3,
     "maxHand": 7,
-    "tacticalObjective": "Leadership: Deploy an Elite unit (Mana 4+) this turn.",
+    "tacticalObjective": "Leadership: Deploy an Elite unit (Tribute 4+) this turn.",
     "reward": 3
   },
   {

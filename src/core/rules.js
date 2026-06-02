@@ -532,8 +532,8 @@ export function applyEventEffect(state, playerKey, card, targetLane = null) {
   }
   if (name.includes('battle siren') || hasAbility(card, 'Tithe')) {
     drawCards(player, 1);
-    opponent.mana = clampMin(opponent.mana - 2, 0);
-    addLog(state, `${card.name}: drew 1 and reduced enemy Mana by 2.`);
+    opponent.tp = clampMin(opponent.tp - 2, 0);
+    addLog(state, `${card.name}: drew 1 and reduced enemy Tribute by 2.`);
     return true;
   }
   if (name.includes('mind-fog') || hasAbility(card, 'Lockdown')) {
@@ -558,7 +558,7 @@ export function checkBattleplanObjective(state, playerKey) {
     return sideLaneControlled(state, playerKey, 'left') && sideLaneControlled(state, playerKey, 'right');
   }
   if (id === 'master_scout') return !!player.turnFlags.revealedFaceDown;
-  if (id === 'tactical_reserve') return player.mana >= 3;
+  if (id === 'tactical_reserve') return player.tp >= 3;
   if (id === 'the_grand_ruse') return !!player.turnFlags.ruseSucceeded;
   if (id === 'high_command') return !!player.turnFlags.deployedElite;
   if (id === 'total_war') return CONFIG.LANES.every(lane => (player.turnFlags.attacksDeclaredByLane || []).includes(lane));
@@ -632,11 +632,12 @@ export function checkWinner(state) {
 
 export function prepareStrategyPhase(state, playerKey) {
   const player = state.players[playerKey];
-  if (player.battleplanDeck.length < 3) {
-    // Reshuffle the standard choices by putting already-used current plan back.
-    player.battleplanDeck = shuffle([...(player.battleplanDeck || []), player.currentBattleplan].filter(Boolean));
+  // All available battleplans are shown every turn. The player picks freely.
+  const allPlans = [...(player.battleplanDeck || [])];
+  if (player.currentBattleplan && !allPlans.find(bp => bp.id === player.currentBattleplan.id)) {
+    allPlans.push({ ...player.currentBattleplan });
   }
-  player.battleplanChoices = player.battleplanDeck.splice(0, 3);
+  player.battleplanChoices = allPlans;
   state.pendingAction = { type: 'chooseBattleplan', player: playerKey };
   state.phase = 'strategy';
   addLog(state, `${player.name} is choosing a Battleplan.`);

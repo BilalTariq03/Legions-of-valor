@@ -5,7 +5,7 @@ import { shuffle } from '../core/utils.js';
 // Online multiplayer sends the chosen deck id through the room state.
 // Custom decks are stored in localStorage on the computer that created them.
 // Later, this can be replaced with Firebase user profiles.
-export const DECK_SIZE = 30;
+export const DECK_SIZE = 50;
 export const CUSTOM_DECK_STORAGE_KEY = 'lovCustomDecksV1';
 
 const DEFAULT_DECK_NAMES = {
@@ -48,23 +48,27 @@ export function makeBalancedDefaultDeck(faction) {
   const heavy = units.filter(c => (c.cost || 0) >= 5).sort((a, b) => byScore(b) - byScore(a));
   const cardIds = [];
 
-  // 20 faction units: early plays, mid-game bodies, and a few elite/high-cost finishers.
-  for (const c of cheap.slice(0, 4)) addCopies(cardIds, c, 2, 20);
-  for (const c of mid.slice(0, 4)) addCopies(cardIds, c, 2, 20);
-  for (const c of heavy.slice(0, 6)) addCopies(cardIds, c, c.elite ? 1 : 1, 20);
+  // ~34 faction units: fill out with 2 copies of each available unit.
+  for (const c of cheap) addCopies(cardIds, c, 2, 34);
+  for (const c of mid) addCopies(cardIds, c, 2, 34);
+  for (const c of heavy) addCopies(cardIds, c, 2, 34);
   let safety = 0;
-  while (cardIds.length < 20 && units.length && safety < 100) {
-    addCopies(cardIds, units[safety % units.length], 1, 20);
+  while (cardIds.length < 34 && units.length && safety < 200) {
+    addCopies(cardIds, units[safety % units.length], 1, 34);
     safety++;
   }
 
-  // 5 flexible events/traps and 5 equipment pieces.
-  for (const id of SHARED_EVENT_IDS) if (cardIds.length < 25) cardIds.push(id);
-  for (const id of defaultEquipmentIds()) if (cardIds.length < DECK_SIZE) cardIds.push(id);
+  // 8 events/traps and 8 equipment pieces to fill to 50.
+  const events = CARD_DATABASE.filter(c => c.type === 'eventTrap').sort((a, b) => byScore(b) - byScore(a));
+  const equipment = CARD_DATABASE.filter(c => c.type === 'equipment').sort((a, b) => (a.cost || 0) - (b.cost || 0));
+  for (const id of SHARED_EVENT_IDS) if (cardIds.length < 42) cardIds.push(id);
+  for (const c of events) if (cardIds.length < 42) cardIds.push(c.id);
+  for (const id of defaultEquipmentIds()) if (cardIds.length < 50) cardIds.push(id);
+  for (const c of equipment) if (cardIds.length < DECK_SIZE) cardIds.push(c.id);
 
-  // Emergency pad if future card lists change.
+  // Emergency pad.
   safety = 0;
-  while (cardIds.length < DECK_SIZE && units.length && safety < 100) {
+  while (cardIds.length < DECK_SIZE && units.length && safety < 200) {
     cardIds.push(units[safety % units.length].id);
     safety++;
   }
@@ -73,6 +77,7 @@ export function makeBalancedDefaultDeck(faction) {
     id: `default_${String(faction).toLowerCase()}`,
     name: DEFAULT_DECK_NAMES[faction] || `${faction} Default Deck`,
     faction,
+    factions: [faction],
     isDefault: true,
     cardIds: cardIds.slice(0, DECK_SIZE)
   };
@@ -96,7 +101,7 @@ export function saveCustomDecks(decks) {
 }
 
 export function saveCustomDeck(deck) {
-  if (!isValidDeckShape(deck)) throw new Error('Deck must have a name, faction, and exactly 30 cards.');
+  if (!isValidDeckShape(deck)) throw new Error(`Deck must have a name, faction, and exactly ${DECK_SIZE} cards.`);
   const decks = loadCustomDecks().filter(d => d.id !== deck.id);
   decks.push(deck);
   saveCustomDecks(decks);
@@ -112,7 +117,10 @@ export function getAllDecks() {
 }
 
 export function getDecksForFaction(faction) {
-  return getAllDecks().filter(d => d.faction === faction);
+  return getAllDecks().filter(d => {
+    if (Array.isArray(d.factions)) return d.factions.includes(faction);
+    return d.faction === faction;
+  });
 }
 
 export function getDeckDefinition(deckId, faction) {
@@ -128,7 +136,7 @@ export function createDeckInstances(deckDefinition, owner, instantiateCard) {
     const template = templatesById.get(id);
     if (template) instances.push(instantiateCard(template, owner));
   }
-  return shuffle(instances).slice(0, DECK_SIZE);
+  return shuffle(instances);
 }
 
 export function randomFaction(except = '') {
@@ -137,10 +145,12 @@ export function randomFaction(except = '') {
 }
 
 export function isValidDeckShape(deck) {
+  const factionOk = deck.faction && (FACTIONS.includes(deck.faction)
+    || (Array.isArray(deck.factions) && deck.factions.every(f => FACTIONS.includes(f))));
   return !!deck
     && typeof deck.id === 'string'
     && typeof deck.name === 'string'
-    && FACTIONS.includes(deck.faction)
+    && !!factionOk
     && Array.isArray(deck.cardIds)
     && deck.cardIds.length === DECK_SIZE;
 }

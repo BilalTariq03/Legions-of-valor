@@ -135,7 +135,7 @@ function chooseDeploymentAction(state, difficulty) {
 
   // 1) Play the best affordable unit into a sensible empty lane.
   const emptyLanes = CONFIG.LANES.filter(lane => !bot.board.lanes[lane].unit);
-  const units = bot.hand.filter(c => c.type === 'unit' && (c.cost || 0) <= bot.mana);
+  const units = bot.hand.filter(c => c.type === 'unit' && (c.cost || 0) <= bot.tp);
   if (emptyLanes.length && units.length) {
     const unit = chooseUnitToPlay(units, label);
     const lane = chooseLaneForUnit(state, unit, emptyLanes, label);
@@ -143,7 +143,7 @@ function chooseDeploymentAction(state, difficulty) {
   }
 
   // 2) Equip a friendly unit if the bot can afford equipment.
-  const equipment = bot.hand.filter(c => c.type === 'equipment' && (c.cost || 0) <= bot.mana);
+  const equipment = bot.hand.filter(c => c.type === 'equipment' && (c.cost || 0) <= bot.tp);
   if (equipment.length) {
     const target = chooseEquipmentTarget(bot);
     const equip = equipment.find(card => {
@@ -158,7 +158,7 @@ function chooseDeploymentAction(state, difficulty) {
     const openBackrow = CONFIG.LANES.find(lane => !bot.board.backrow[lane]);
     const trap = bot.hand.find(c => c.type === 'eventTrap');
     const cost = 1 + CONFIG.LANES.filter(lane => bot.board.backrow[lane]).length;
-    if (openBackrow && trap && bot.mana >= cost) {
+    if (openBackrow && trap && bot.tp >= cost) {
       return { type: 'SET_FACE_DOWN', cardId: trap.instanceId, lane: openBackrow };
     }
   }

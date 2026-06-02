@@ -292,7 +292,7 @@ document.addEventListener('click', async (event) => {
       return;
     }
     if (action === 'builder-clear') {
-      window.__lovDeckBuilder = { faction: inputValue('builderFaction', 'Elves'), cardIds: [] };
+      window.__lovDeckBuilder = { faction: inputValue('builderFaction', 'Elves'), faction2: inputValue('builderFaction2', ''), cardIds: [] };
       hydrateTitleTools();
       return;
     }
@@ -398,6 +398,11 @@ document.addEventListener('click', async (event) => {
       uiState.selectedCardId = null;
       return;
     }
+    if (action === 'tribute-card') {
+      await dispatch({ type: 'TRIBUTE_CARD', cardId: el.dataset.cardId });
+      uiState.selectedCardId = null;
+      return;
+    }
     if (action === 'set-facedown') {
       await dispatch({ type: 'SET_FACE_DOWN', cardId: el.dataset.cardId, lane: el.dataset.lane });
       uiState.selectedCardId = null;
@@ -472,7 +477,13 @@ document.addEventListener('change', async (event) => {
     }
   }
   if (el.dataset.action === 'builder-refresh') {
-    window.__lovDeckBuilder = { faction: el.value, cardIds: [] };
+    const faction2 = document.getElementById('builderFaction2')?.value || '';
+    window.__lovDeckBuilder = { faction: el.value, faction2, cardIds: [] };
+    hydrateTitleTools();
+  }
+  if (el.dataset.action === 'builder-refresh2') {
+    const state = ensureBuilderState();
+    state.faction2 = el.value;
     hydrateTitleTools();
   }
   if (el.dataset.action === 'refresh-title-decks') {
@@ -483,7 +494,11 @@ document.addEventListener('change', async (event) => {
 
 function ensureBuilderState() {
   if (!window.__lovDeckBuilder) {
-    window.__lovDeckBuilder = { faction: document.getElementById('builderFaction')?.value || 'Elves', cardIds: [] };
+    window.__lovDeckBuilder = {
+      faction: document.getElementById('builderFaction')?.value || 'Elves',
+      faction2: document.getElementById('builderFaction2')?.value || '',
+      cardIds: []
+    };
   }
   return window.__lovDeckBuilder;
 }
@@ -524,6 +539,8 @@ function renderDeckBuilder() {
   const state = ensureBuilderState();
   const factionSelect = document.getElementById('builderFaction');
   if (factionSelect) factionSelect.value = state.faction;
+  const faction2Select = document.getElementById('builderFaction2');
+  if (faction2Select && state.faction2 !== undefined) faction2Select.value = state.faction2 || '';
 
   const counts = countIds(state.cardIds);
   const countEl = document.getElementById('builderCount');
@@ -541,19 +558,28 @@ function renderDeckBuilder() {
 
   const poolEl = document.getElementById('builderCards');
   if (poolEl) {
-    const pool = CARD_DATABASE.filter(c => c.faction === state.faction || c.type === 'eventTrap' || c.type === 'equipment');
+    const faction2 = state.faction2 || '';
+    const pool = CARD_DATABASE.filter(c =>
+      c.faction === state.faction ||
+      (faction2 && c.faction === faction2) ||
+      c.type === 'eventTrap' ||
+      c.type === 'equipment'
+    );
     poolEl.innerHTML = pool.map(card => {
       const count = counts[card.id] || 0;
       const max = card.elite ? 1 : 2;
       const disabled = state.cardIds.length >= DECK_SIZE || count >= max;
-      return `<button class="builder-card-button" data-action="builder-add-card" data-card-id="${escapeHtml(card.id)}" ${disabled ? 'disabled' : ''}>+ ${escapeHtml(card.name)} <span>${escapeHtml(card.type)} · ${card.cost ?? 0}TP · ${count}/${max}</span></button>`;
+      return `<button class="builder-card-button" data-action="builder-add-card" data-card-id="${escapeHtml(card.id)}" ${disabled ? 'disabled' : ''}>+ ${escapeHtml(card.name)} <span>${escapeHtml(card.faction)} · ${escapeHtml(card.type)} · ${card.cost ?? 0}TP · ${count}/${max}</span></button>`;
     }).join('');
   }
 
   const savedEl = document.getElementById('savedDecks');
   if (savedEl) {
     const custom = loadCustomDecks();
-    savedEl.innerHTML = custom.length ? custom.map(deck => `<div class="saved-deck-row"><span>${escapeHtml(deck.name)} — ${escapeHtml(deck.faction)} (${deck.cardIds.length})</span><button data-action="builder-delete-deck" data-deck-id="${escapeHtml(deck.id)}">Delete</button></div>`).join('') : '<div class="small-note">No custom decks saved yet.</div>';
+    savedEl.innerHTML = custom.length ? custom.map(deck => {
+      const factionLabel = Array.isArray(deck.factions) ? deck.factions.join(' + ') : (deck.faction || '');
+      return `<div class="saved-deck-row"><span>${escapeHtml(deck.name)} — ${escapeHtml(factionLabel)} (${deck.cardIds.length})</span><button data-action="builder-delete-deck" data-deck-id="${escapeHtml(deck.id)}">Delete</button></div>`;
+    }).join('') : '<div class="small-note">No custom decks saved yet.</div>';
   }
 }
 
@@ -561,7 +587,7 @@ function addCardToBuilder(cardId) {
   const state = ensureBuilderState();
   const card = cardTemplateById(cardId);
   if (!card) return;
-  if (state.cardIds.length >= DECK_SIZE) return toast('Deck already has 30 cards.');
+  if (state.cardIds.length >= DECK_SIZE) return toast(`Deck is already at ${DECK_SIZE} cards.`);
   const count = state.cardIds.filter(id => id === cardId).length;
   const max = card.elite ? 1 : 2;
   if (count >= max) return toast(`Copy limit reached for ${card.name}.`);
@@ -576,17 +602,21 @@ function removeCardFromBuilder(cardId) {
 
 function saveDeckFromBuilder() {
   const state = ensureBuilderState();
-  const name = inputValue('builderDeckName', `${state.faction} Custom Deck`);
+  const faction2 = state.faction2 || '';
+  const factionLabel = faction2 ? `${state.faction}+${faction2}` : state.faction;
+  const name = inputValue('builderDeckName', `${factionLabel} Custom Deck`);
   if (state.cardIds.length !== DECK_SIZE) throw new Error(`Deck must contain exactly ${DECK_SIZE} cards.`);
+  const factions = faction2 ? [state.faction, faction2] : [state.faction];
   const deck = {
     id: `custom_${Date.now()}`,
     name,
     faction: state.faction,
+    factions,
     isDefault: false,
     cardIds: [...state.cardIds]
   };
   saveCustomDeck(deck);
-  window.__lovDeckBuilder = { faction: state.faction, cardIds: [] };
+  window.__lovDeckBuilder = { faction: state.faction, faction2, cardIds: [] };
   const nameInput = document.getElementById('builderDeckName');
   if (nameInput) nameInput.value = '';
 }

@@ -320,7 +320,7 @@ export const CARD_DATABASE = [
     ],
     "elite": false,
     "equipmentSlot": null,
-    "description": "Costs 1 less Mana if placed on same race. Once per turn: Look at 1 Hidden Maneuver.",
+    "description": "Costs 1 less Tribute if placed on same race. Once per turn: Look at 1 Hidden Maneuver.",
     "lore": "Member of the ancient Assassin’s Guild.",
     "image": "assets/cards/elves/moon_veil_assassin.png",
     "maxCopies": 2
@@ -780,7 +780,7 @@ export const CARD_DATABASE = [
     ],
     "elite": false,
     "equipmentSlot": null,
-    "description": "Costs 1 less Mana if placed on same race. Does not trigger Traps when attacking.",
+    "description": "Costs 1 less Tribute if placed on same race. Does not trigger Traps when attacking.",
     "lore": "A young captain loved by his men and superiors alike. A daring soldier who deserves his spot in the vanguard.",
     "image": "assets/cards/humans/captain_rodry.png",
     "maxCopies": 2
@@ -818,7 +818,7 @@ export const CARD_DATABASE = [
     ],
     "elite": false,
     "equipmentSlot": null,
-    "description": "If this unit is destroyed in a Clash, the attacker is also destroyed. Costs 1 less Mana if placed on same race.",
+    "description": "If this unit is destroyed in a Clash, the attacker is also destroyed. Costs 1 less Tribute if placed on same race.",
     "lore": "Infamous for his ruthless efficiency, battlefield ferocity, and deep hatred of elves.",
     "image": "assets/cards/humans/commander_rykard.png",
     "maxCopies": 2
@@ -1103,7 +1103,7 @@ export const CARD_DATABASE = [
     ],
     "elite": false,
     "equipmentSlot": null,
-    "description": "Costs 1 less Mana if placed on same race.",
+    "description": "Costs 1 less Tribute if placed on same race.",
     "lore": "High-tier warriors who seized Aurion sites across the continent.",
     "image": "assets/cards/orcs/elite_marauder.png",
     "maxCopies": 2
@@ -1177,7 +1177,7 @@ export const CARD_DATABASE = [
     ],
     "elite": false,
     "equipmentSlot": null,
-    "description": "When this unit wins a clash, opponent must discard 1 card from his hand. Costs 1 less Mana if placed on same race.",
+    "description": "When this unit wins a clash, opponent must discard 1 card from his hand. Costs 1 less Tribute if placed on same race.",
     "lore": "A brutal Orcish Mercenary, She is capanble of killing \"anything that bleeds,\" even those in Dwarven armor.",
     "image": "assets/cards/orcs/gershaw_shatter_shield.png",
     "maxCopies": 2
@@ -1501,7 +1501,7 @@ export const CARD_DATABASE = [
     ],
     "elite": false,
     "equipmentSlot": null,
-    "description": "Only card in Parry: Add to Mana.",
+    "description": "Only card in Parry: Add its DP to your available Tribute.",
     "lore": "Tends to the Forge of First Flame, which burns constantly and perfectly.",
     "image": "assets/cards/dwarves/forge_fire_disciple.png",
     "maxCopies": 2
@@ -1538,7 +1538,7 @@ export const CARD_DATABASE = [
     ],
     "elite": false,
     "equipmentSlot": null,
-    "description": "Costs 1 less Mana if placed on same race. +1 AP for each other unit of same Race.",
+    "description": "Costs 1 less Tribute if placed on same race. +1 AP for each other unit of same Race.",
     "lore": "A lord who believes that trust is a question of longevity, not emotion.",
     "image": "assets/cards/dwarves/concord_thane.png",
     "maxCopies": 2
@@ -1556,7 +1556,7 @@ export const CARD_DATABASE = [
     ],
     "elite": false,
     "equipmentSlot": null,
-    "description": "Costs 1 less Mana if placed on same race.",
+    "description": "Costs 1 less Tribute if placed on same race.",
     "lore": "A builder who declared that Aurion is not a force the Dwarves need fear.",
     "image": "assets/cards/dwarves/architect_of_the_deep.png",
     "maxCopies": 2
