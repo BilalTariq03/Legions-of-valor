@@ -1,5 +1,5 @@
 import { CONFIG } from '../core/config.js';
-import { calculateAP, legalAttackTargets } from '../core/rules.js';
+import { calculateAP, legalAttackTargets, tributeAvailable } from '../core/rules.js';
 
 // This UID is used by the reducer exactly like a seated human player.
 // The bot owns P2, so its actions pass this UID through the normal rules engine.
@@ -134,8 +134,9 @@ function chooseDeploymentAction(state, difficulty) {
   const label = String(difficulty || 'normal').toLowerCase();
 
   const emptyLanes = CONFIG.LANES.filter(lane => !bot.board.lanes[lane].unit);
+  const botTP = tributeAvailable(bot);
   const canAffordAny = bot.hand.some(c =>
-    (c.type === 'unit' || c.type === 'equipment' || c.type === 'eventTrap') && (c.cost || 0) <= bot.tp
+    (c.type === 'unit' || c.type === 'equipment' || c.type === 'eventTrap') && (c.cost || 0) <= botTP
   );
 
   // 0) Build tribute if nothing is affordable and we still have cards to spare.
@@ -145,7 +146,7 @@ function chooseDeploymentAction(state, difficulty) {
   }
 
   // 1) Play the best affordable unit into a sensible empty lane.
-  const units = bot.hand.filter(c => c.type === 'unit' && (c.cost || 0) <= bot.tp);
+  const units = bot.hand.filter(c => c.type === 'unit' && (c.cost || 0) <= botTP);
   if (emptyLanes.length && units.length) {
     const unit = chooseUnitToPlay(units, label);
     const lane = chooseLaneForUnit(state, unit, emptyLanes, label);
@@ -153,7 +154,7 @@ function chooseDeploymentAction(state, difficulty) {
   }
 
   // 2) Equip a friendly unit if the bot can afford equipment.
-  const equipment = bot.hand.filter(c => c.type === 'equipment' && (c.cost || 0) <= bot.tp);
+  const equipment = bot.hand.filter(c => c.type === 'equipment' && (c.cost || 0) <= botTP);
   if (equipment.length) {
     const target = chooseEquipmentTarget(bot);
     const equip = equipment.find(card => {
@@ -168,7 +169,7 @@ function chooseDeploymentAction(state, difficulty) {
     const openBackrow = CONFIG.LANES.find(lane => !bot.board.backrow[lane]);
     const trap = bot.hand.find(c => c.type === 'eventTrap');
     const cost = 1 + CONFIG.LANES.filter(lane => bot.board.backrow[lane]).length;
-    if (openBackrow && trap && bot.tp >= cost) {
+    if (openBackrow && trap && botTP >= cost) {
       return { type: 'SET_FACE_DOWN', cardId: trap.instanceId, lane: openBackrow };
     }
   }

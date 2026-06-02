@@ -3,7 +3,7 @@ import { FACTIONS } from '../data/cards.js';
 import { getDecksForFaction, getDefaultDecks, DECK_SIZE } from '../data/decks.js';
 import { abilityText } from '../data/abilities.js';
 import { otherPlayer, titleCaseLane } from '../core/utils.js';
-import { calculateAP, faceDownCost, legalAttackTargets, countEquipment, effectiveDp } from '../core/rules.js';
+import { calculateAP, faceDownCost, legalAttackTargets, countEquipment, effectiveDp, tributeAvailable } from '../core/rules.js';
 
 
 function renderDeckOptionsForFaction(faction, selectedId = '') {
@@ -213,11 +213,15 @@ export function renderGame(room, uid, uiState) {
 }
 
 function renderStats(me, enemy) {
+  const tp = tributeAvailable(me);
+  const pile = (me.tribute ?? []).length;
+  const volatile = me.volatileTributeBonus ?? 0;
+  const tpLabel = volatile !== 0 ? `${tp} TP <span class="volatile-note">(${pile}${volatile >= 0 ? '+' : ''}${volatile})</span>` : `${tp} TP`;
   return `<div class="stat-grid" style="margin-top:12px;">
     <div class="stat"><b>${me.aurion ?? 0}</b><span>Your Aurion</span></div>
     <div class="stat"><b>${enemy.aurion ?? 0}</b><span>Enemy Aurion</span></div>
-    <div class="stat"><b>${me.tp ?? 0}</b><span>Tribute (TP)</span></div>
-    <div class="stat"><b>${(me.tribute ?? []).length}</b><span>Tribute Pile</span></div>
+    <div class="stat"><b>${tpLabel}</b><span>Tribute</span></div>
+    <div class="stat"><b>${pile}</b><span>Tribute Pile</span></div>
     <div class="stat"><b>${(me.deck ?? []).length}</b><span>Deck</span></div>
     <div class="stat"><b>${(me.discard ?? []).length}</b><span>Discard</span></div>
     <div class="stat"><b>${countEquipment(me)}</b><span>Equipment Active</span></div>
@@ -242,7 +246,7 @@ function renderSelectionActions(state, mySeat, card, selectedUnit, uiState) {
   if (card) {
     const laneButtons = CONFIG.LANES.map(l => `<button data-action="${card.type === 'unit' ? 'play-unit' : card.type === 'equipment' ? 'play-equipment' : 'play-event'}" data-card-id="${card.instanceId}" data-lane="${l}">${titleCaseLane(l)}</button>`).join('');
     const setButtons = CONFIG.LANES.map(l => `<button data-action="set-facedown" data-card-id="${card.instanceId}" data-lane="${l}">Set ${titleCaseLane(l)}</button>`).join('');
-    const tributeButton = `<button data-action="tribute-card" data-card-id="${card.instanceId}">Send to Tribute${card.type === 'eventTrap' ? ' (+3 TP)' : ' (+1 TP)'}</button>`;
+    const tributeButton = `<button data-action="tribute-card" data-card-id="${card.instanceId}">Send to Tribute${card.type === 'eventTrap' ? ' (+1 perm, +2 volatile)' : ' (+1 TP permanent)'}</button>`;
     return `<div class="card-preview">
       <h2 class="panel-title">Selected Card</h2>
       ${renderCard(card, { preview: true })}

@@ -6,7 +6,8 @@ import {
   removeFromHand, onDeployAbilities, applyEventEffect, calculateAP, hasAbility,
   legalAttackTargets, killUnit, awardKillAurion, triggerOnWinAbilities,
   triggerMonarchStrike, scoreEndOfTurn, checkWinner, prepareStrategyPhase,
-  resetTurnTemporaryEffects, effectiveDp, friendlyHasAbility
+  resetTurnTemporaryEffects, effectiveDp, friendlyHasAbility,
+  tributeAvailable, spendTribute
 } from './rules.js';
 
 export function reduceGameState(inputState, action, actorUid) {
@@ -212,7 +213,7 @@ function selectBattleplan(state, action, uid) {
     const p = state.players[pKey];
     const bonus = p.momentumDrawBonus || 0;
     p.momentumDrawBonus = 0;
-    p.tp = (p.tribute || []).length;
+    p.volatileTributeBonus = 0;
     p.turnFlags = freshTurnFlags();
     const amount = (p.currentBattleplan?.draw || 0) + bonus;
     drawCards(p, amount);
@@ -235,10 +236,10 @@ function playUnit(state, action, uid) {
   if (!CONFIG.LANES.includes(lane)) return errorState(state, 'Invalid lane.');
   if (player.board?.lanes?.[lane]?.unit) return errorState(state, 'That lane already has a unit.');
   const cost = effectivePlayCost(state, seat, card, lane);
-  if (player.tp < cost) return errorState(state, 'Not enough Tribute.');
+  if (tributeAvailable(player) < cost) return errorState(state, 'Not enough Tribute.');
 
   const unit = removeFromHand(player, card.instanceId);
-  player.tp -= cost;
+  spendTribute(player, cost);
   unit.temp = unit.temp || {};
   unit.equipment = unit.equipment || { weapon: null, armor: null };
   player.board.lanes[lane].unit = unit;
@@ -260,9 +261,9 @@ function playEquipment(state, action, uid) {
   if (!unit) return errorState(state, 'Choose a friendly unit to equip.');
   const slot = card.equipmentSlot || 'weapon';
   if (unit.equipment?.[slot]) return errorState(state, `That unit already has ${slot}.`);
-  if (player.tp < card.cost) return errorState(state, 'Not enough Tribute.');
+  if (tributeAvailable(player) < card.cost) return errorState(state, 'Not enough Tribute.');
   const eq = removeFromHand(player, card.instanceId);
-  player.tp -= eq.cost;
+  spendTribute(player, eq.cost);
   unit.equipment[slot] = eq;
   addLog(state, `${player.name} equipped ${unit.name} with ${eq.name}.`);
   return state;
@@ -279,9 +280,9 @@ function setFaceDown(state, action, uid) {
   if (!CONFIG.LANES.includes(lane)) return errorState(state, 'Invalid lane.');
   if (player.board?.backrow?.[lane]) return errorState(state, 'That Back Row slot is occupied.');
   const cost = faceDownCost(player);
-  if (player.tp < cost) return errorState(state, 'Not enough Tribute to set face-down.');
+  if (tributeAvailable(player) < cost) return errorState(state, 'Not enough Tribute to set face-down.');
   const hidden = removeFromHand(player, card.instanceId);
-  player.tp -= cost;
+  spendTribute(player, cost);
   player.board.backrow[lane] = {
     instanceId: hidden.instanceId,
     owner: seat,
@@ -299,9 +300,9 @@ function playEvent(state, action, uid) {
   const player = state.players[seat];
   const card = player.hand.find(c => c.instanceId === action.cardId);
   if (!card || card.type !== 'eventTrap') return errorState(state, 'Select an Event/Trap from your hand.');
-  if (player.tp < card.cost) return errorState(state, 'Not enough Tribute.');
+  if (tributeAvailable(player) < card.cost) return errorState(state, 'Not enough Tribute.');
   const event = removeFromHand(player, card.instanceId);
-  player.tp -= event.cost;
+  spendTribute(player, event.cost);
   const ok = applyEventEffect(state, seat, event, action.targetLane);
   player.discard.push(event);
   if (!ok) return errorState(state, `${event.name} could not resolve.`);
@@ -317,13 +318,12 @@ function tributeCard(state, action, uid) {
   if (!card) return errorState(state, 'Select a card from your hand.');
   const sacrificed = removeFromHand(player, card.instanceId);
   player.tribute.push(sacrificed);
-  player.tp += 1;
   if (sacrificed.type === 'eventTrap') {
-    // Spell cards give a volatile +2 TP this turn only (resets next turn).
-    player.tp += 2;
-    addLog(state, `${player.name} placed ${sacrificed.name} (Spell) into Tribute for +3 TP this turn.`);
+    // Spell cards grant +2 volatile TP this turn on top of the permanent +1 from the pile.
+    player.volatileTributeBonus = (player.volatileTributeBonus ?? 0) + 2;
+    addLog(state, `${player.name} placed ${sacrificed.name} (Spell) into Tribute. +1 TP permanent, +2 TP this turn.`);
   } else {
-    addLog(state, `${player.name} sent ${sacrificed.name} to Tribute (+1 TP).`);
+    addLog(state, `${player.name} sent ${sacrificed.name} to Tribute (+1 TP permanent).`);
   }
   return state;
 }
@@ -454,10 +454,10 @@ function submitParry(state, action, uid) {
     const card = used[i];
     removeFromHand(defender, card.instanceId);
     if (used.length === 1 && hasAbility(card, 'Logistics Shield')) {
-      // Only card in parry chain: add its DP to tribute pool instead of discarding
-      defender.tp += card.dp || 0;
+      // Only card in parry chain: convert its DP into volatile TP for this turn.
+      defender.volatileTributeBonus = (defender.volatileTributeBonus ?? 0) + (card.dp || 0);
       defender.discard.push(card);
-      addLog(state, `${card.name}'s Logistics Shield added ${card.dp || 0} Tribute.`);
+      addLog(state, `${card.name}'s Logistics Shield added ${card.dp || 0} volatile Tribute this turn.`);
     } else if (i === 1 && hasAbility(card, 'Chain-Link')) {
       // 2nd card in chain goes to Tribute
       defender.tribute.push(card);
@@ -612,10 +612,10 @@ function endConflict(state, action, uid) {
   const next = otherPlayer(seat);
   state.activePlayer = next;
   state.turnNumber += 1;
+  // Clear volatile tribute earned this turn — it doesn't carry over.
+  state.players[seat].volatileTributeBonus = 0;
   state.players[seat].turnFlags = freshTurnFlags();
   state.players[next].turnFlags = freshTurnFlags();
-  // Refresh next player's TP from their tribute pile.
-  state.players[next].tp = (state.players[next].tribute || []).length;
   resetTurnTemporaryEffects(state);
   // Draw 2 cards to start the next player's turn.
   drawCards(state.players[next], 2);

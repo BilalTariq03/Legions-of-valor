@@ -2,6 +2,23 @@ import { CONFIG } from './config.js';
 import { drawCards, freshTurnFlags, freshUnitTemp } from './game-state.js';
 import { clampMin, otherPlayer, shuffle, titleCaseLane } from './utils.js';
 
+// Returns the total TP a player can currently spend.
+export function tributeAvailable(player) {
+  return Math.max(0, (player.tribute ?? []).length + (player.volatileTributeBonus ?? 0));
+}
+
+// Spend 'amount' TP: removes cards from tribute pile first (oldest first),
+// then burns volatile bonus for any remainder.
+export function spendTribute(player, amount) {
+  const toSpend = Math.min(amount, (player.tribute ?? []).length);
+  const spent = player.tribute.splice(0, toSpend);
+  player.discard.push(...spent);
+  const remaining = amount - toSpend;
+  if (remaining > 0) {
+    player.volatileTributeBonus = Math.max(0, (player.volatileTributeBonus ?? 0) - remaining);
+  }
+}
+
 export function addLog(state, message) {
   state.log = state.log || [];
   state.log.unshift(message);
@@ -532,8 +549,8 @@ export function applyEventEffect(state, playerKey, card, targetLane = null) {
   }
   if (name.includes('battle siren') || hasAbility(card, 'Tithe')) {
     drawCards(player, 1);
-    opponent.tp = clampMin(opponent.tp - 2, 0);
-    addLog(state, `${card.name}: drew 1 and reduced enemy Tribute by 2.`);
+    opponent.volatileTributeBonus = (opponent.volatileTributeBonus ?? 0) - 2;
+    addLog(state, `${card.name}: drew 1 and reduced enemy Tribute by 2 this turn.`);
     return true;
   }
   if (name.includes('mind-fog') || hasAbility(card, 'Lockdown')) {
@@ -558,7 +575,7 @@ export function checkBattleplanObjective(state, playerKey) {
     return sideLaneControlled(state, playerKey, 'left') && sideLaneControlled(state, playerKey, 'right');
   }
   if (id === 'master_scout') return !!player.turnFlags.revealedFaceDown;
-  if (id === 'tactical_reserve') return player.tp >= 3;
+  if (id === 'tactical_reserve') return tributeAvailable(player) >= 3;
   if (id === 'the_grand_ruse') return !!player.turnFlags.ruseSucceeded;
   if (id === 'high_command') return !!player.turnFlags.deployedElite;
   if (id === 'total_war') return CONFIG.LANES.every(lane => (player.turnFlags.attacksDeclaredByLane || []).includes(lane));

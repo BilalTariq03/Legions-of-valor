@@ -35,7 +35,7 @@ export function emptyPlayer(seat) {
     // If null, the balanced default deck for this faction is used.
     deckChoiceId: null,
     aurion: CONFIG.STARTING_AURION,
-    tp: 0,
+    volatileTributeBonus: 0,
     deck: [],
     hand: [],
     discard: [],
@@ -168,7 +168,7 @@ export function resetPlayerForNewGame(player, faction, deckChoiceId = null) {
   p.faction = faction;
   p.deckChoiceId = selectedDeckId;
   p.aurion = CONFIG.STARTING_AURION;
-  p.tp = 0;
+  p.volatileTributeBonus = 0;
   p.deck = buildSelectedDeck(faction, seat, selectedDeckId);
   p.battleplanDeck = shuffle(freshBattleplanDeck());
   drawCards(p, CONFIG.STARTING_HAND);
