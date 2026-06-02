@@ -1,0 +1,32 @@
+{
+  "name": "legions-of-valor",
+  "version": "1.0.0",
+  "description": "A playable online 1v1 browser prototype of Legions of Valor",
+  "type": "module",
+  "main": "src/main.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "npx serve -p 3000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BilalTariq03/Legions-of-valor.git"
+  },
+  "keywords": [
+    "game",
+    "card-game",
+    "browser-game"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BilalTariq03/Legions-of-valor/issues"
+  },
+  "homepage": "https://github.com/BilalTariq03/Legions-of-valor#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}

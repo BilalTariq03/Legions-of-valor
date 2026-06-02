@@ -1,3 +1,4 @@
+import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@2/+esm';
 import { initFirebase, getUid, isFirebaseConfigured } from './firebase.js';
 import { createRoom, createAiRoom, joinRoom, listenToRoom, dispatchRoomAction, inviteLink, extractRoomCode, writeGameStateDirect } from './multiplayer.js';
 import { renderTitle, renderLobby, renderGame, seatByUid } from './ui/ui.js';
@@ -6,6 +7,9 @@ import { reduceGameState } from './core/reducer.js';
 import { firebaseReady } from './firebase.js';
 import { CARD_DATABASE, FACTIONS } from './data/cards.js';
 import { DECK_SIZE, loadCustomDecks, saveCustomDeck, deleteCustomDeck, cardTemplateById, getDecksForFaction, randomFaction } from './data/decks.js';
+
+// Initialize Vercel Web Analytics
+inject();
 
 const app = document.getElementById('app');
 const uiState = {

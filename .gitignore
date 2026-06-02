@@ -1,2 +1,24 @@
 Card_Building.xlsx
 Legions_of_Valor_Manual.pdf
+
+# Dependencies
+node_modules/
+
+# Package manager lock files are tracked
+# package-lock.json is included in the repository
+
+# Build outputs
+dist/
+build/
+.vercel/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
