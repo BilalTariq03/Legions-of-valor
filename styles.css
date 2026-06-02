@@ -283,6 +283,34 @@ select option { background: #1b100b; color: var(--text); }
 .action-grid { display: grid; gap: 8px; margin-top: 10px; }
 .action-grid.compact { grid-template-columns: 1fr 1fr; }
 .card-preview { margin-top: 12px; }
+
+.ability-breakdown {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ability-block {
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 2px solid var(--gold, #c9a84c);
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+.ability-heading {
+  display: block;
+  font-weight: bold;
+  font-size: 0.78rem;
+  color: var(--gold, #c9a84c);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+}
+.ability-desc {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted, #bbb);
+  line-height: 1.4;
+}
 .log-list { display: grid; gap: 7px; max-height: 280px; overflow: auto; padding-right: 5px; }
 .log-item { color: #ddcfad; font-size: 13px; padding: 7px; background: rgba(0,0,0,.2); border-radius: 8px; }
 

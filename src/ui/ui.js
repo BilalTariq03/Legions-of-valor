@@ -250,7 +250,7 @@ function renderSelectionActions(state, mySeat, card, selectedUnit, uiState) {
     return `<div class="card-preview">
       <h2 class="panel-title">Selected Card</h2>
       ${renderCard(card, { preview: true })}
-      ${renderAbilityDescriptions(card)}
+      ${renderAbilityBreakdown(card)}
       ${state.phase === 'deployment' ? `<div class="action-grid compact" style="margin-top:10px;">${laneButtons}${setButtons}${tributeButton}</div>` : '<p class="small-note">Cards can be played during Deployment.</p>'}
     </div>`;
   }
@@ -266,8 +266,8 @@ function renderSelectionActions(state, mySeat, card, selectedUnit, uiState) {
     return `<div class="card-preview">
       <h2 class="panel-title">Selected Unit</h2>
       ${renderCard(selectedUnit, { preview: true })}
-      ${renderAbilityDescriptions(selectedUnit)}
       <p class="small-note">Current AP: ${calculateAP(state, mySeat, lane, 'neutral')}</p>
+      ${renderAbilityBreakdown(selectedUnit)}
       ${state.phase === 'conflict' ? `<div class="action-grid compact">${attackButtons}${abilityButtons}</div>` : '<p class="small-note">Units attack during Conflict.</p>'}
     </div>`;
   }
@@ -400,18 +400,22 @@ function abilityList(card) { return (card.abilities || []).join(' · ') || card.
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function escapeAttr(s) { return escapeHtml(s).replace(/'/g, '&#039;'); }
 
-function renderAbilityDescriptions(card) {
+function renderAbilityBreakdown(card) {
   const abilities = card.abilities || [];
-  const parts = [];
-  if (abilities.length > 0) {
-    for (const name of abilities) {
-      const text = abilityText(name);
-      parts.push(`<div class="ability-block"><b class="ability-name">${escapeHtml(name)}</b><p class="ability-desc">${escapeHtml(text)}</p></div>`);
-    }
+
+  if (!abilities.length) {
+    return `<div class="ability-breakdown">
+      <p class="small-note" style="margin-top:8px;">No abilities.</p>
+    </div>`;
   }
-  if (card.description) {
-    parts.push(`<div class="ability-block"><b class="ability-name">Card Effect</b><p class="ability-desc">${escapeHtml(card.description)}</p></div>`);
-  }
-  if (parts.length === 0) return `<p class="small-note">No special abilities.</p>`;
-  return `<div class="ability-list">${parts.join('')}</div>`;
+
+  const blocks = abilities.map(name => {
+    const text = abilityText(name);
+    return `<div class="ability-block">
+      <span class="ability-heading">${escapeHtml(name)}</span>
+      <p class="ability-desc">${escapeHtml(text)}</p>
+    </div>`;
+  }).join('');
+
+  return `<div class="ability-breakdown">${blocks}</div>`;
 }
