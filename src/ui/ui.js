@@ -226,10 +226,10 @@ function renderStats(me, enemy) {
 
 function renderBattleplan(player) {
   const bp = player.currentBattleplan;
-  if (!bp) return `<div class="action-box" style="margin-top:12px;"><b>No Battleplan selected yet.</b></div>`;
+  if (!bp) return `<div class="action-box" style="margin-top:12px;"><b>Choosing Battleplan...</b></div>`;
   return `<div class="action-box" style="margin-top:12px;">
     <h2>${escapeHtml(bp.name)}</h2>
-    <p class="small-note">Draw ${bp.draw} · Max Hand ${bp.maxHand} · Reward +${bp.reward} Aurion</p>
+    <p class="small-note">Reward +${bp.reward} Aurion on success</p>
     <p>${escapeHtml(bp.tacticalObjective)}</p>
   </div>`;
 }
@@ -330,14 +330,14 @@ function renderPendingModal(state, mySeat) {
     const choices = state.players[mySeat].battleplanChoices || [];
     return `<div class="modal-backdrop"><div class="modal-card">
       <h2 class="modal-title">Choose Your Battleplan</h2>
-      <p class="small-note">Pick any of the available battle plans. Draw cards and pursue the objective for bonus Aurion.</p>
+      <p class="small-note">This is chosen once at the start of the duel. Your Battleplan defines your opening draw and the objective that earns bonus Aurion each turn.</p>
       <div class="battleplan-grid">${choices.map(bp => `<div class="battleplan" data-action="select-battleplan" data-battleplan-id="${bp.id}">
         <h3>${escapeHtml(bp.name)}</h3><p>Draw ${bp.draw} · Max Hand ${bp.maxHand}</p><p>${escapeHtml(bp.tacticalObjective)}</p><b>Reward +${bp.reward} Aurion</b>
       </div>`).join('')}</div>
     </div></div>`;
   }
   if (pending.type === 'chooseBattleplan') {
-    return `<div class="modal-backdrop"><div class="modal-card"><h2 class="modal-title">Waiting for opponent to choose a Battleplan...</h2></div></div>`;
+    return `<div class="modal-backdrop"><div class="modal-card"><h2 class="modal-title">Waiting for opponent to choose their Battleplan...</h2><p class="small-note">This only happens once at the start of the duel.</p></div></div>`;
   }
   if (pending.type === 'parry' && pending.defender === mySeat) {
     const hand = state.players[mySeat].hand;

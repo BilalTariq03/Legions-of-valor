@@ -179,33 +179,49 @@ function startGame(state, action, uid, fromReady = false) {
   state.winner = null;
   state.pendingAction = null;
   state.noParryUntilTurnEnd = false;
-  addLog(state, 'The duel begins. Player 1 takes the first Strategy Phase.');
+  addLog(state, 'The duel begins. Both commanders choose their Battleplan.');
   prepareStrategyPhase(state, 'p1');
   return state;
 }
 
 function selectBattleplan(state, action, uid) {
-  const seat = requireTurn(state, uid);
+  // Battleplans are chosen once at game start (p1 first, then p2).
+  // Use requireActor so each player picks when the modal is shown to them.
+  const seat = requireActor(state, uid);
   const player = state.players[seat];
   if (state.phase !== 'strategy' || state.pendingAction?.type !== 'chooseBattleplan') return errorState(state, 'No Battleplan choice is pending.');
+  if (state.pendingAction.player !== seat) return errorState(state, 'It is not your turn to choose a Battleplan.');
   const chosen = player.battleplanChoices.find(bp => bp.id === action.battleplanId);
   if (!chosen) return errorState(state, 'Invalid Battleplan.');
 
-  // All plans stay in the deck; nothing is discarded.
   player.currentBattleplan = chosen;
   player.battleplanChoices = [];
-  // TP resets to the current tribute pile size each turn.
-  player.tp = (player.tribute || []).length;
-  player.turnFlags = freshTurnFlags();
-  resetTurnTemporaryEffects(state);
+  addLog(state, `${player.name} chose ${chosen.name}.`);
 
-  const bonus = player.momentumDrawBonus || 0;
-  player.momentumDrawBonus = 0;
-  const amount = chosen.draw + bonus;
-  drawCards(player, amount);
-  addLog(state, `${player.name} chose ${chosen.name} and drew ${amount} card(s).`);
+  // If the other player hasn't picked yet, show their selection next.
+  const other = otherPlayer(seat);
+  if (!state.players[other].currentBattleplan) {
+    state.activePlayer = other;
+    prepareStrategyPhase(state, other);
+    return state;
+  }
+
+  // Both players have chosen — draw starting hands and begin Turn 1 deployment.
+  resetTurnTemporaryEffects(state);
+  for (const pKey of ['p1', 'p2']) {
+    const p = state.players[pKey];
+    const bonus = p.momentumDrawBonus || 0;
+    p.momentumDrawBonus = 0;
+    p.tp = (p.tribute || []).length;
+    p.turnFlags = freshTurnFlags();
+    const amount = (p.currentBattleplan?.draw || 0) + bonus;
+    drawCards(p, amount);
+    addLog(state, `${p.name} drew ${amount} card(s) from ${p.currentBattleplan.name}.`);
+  }
+  state.activePlayer = 'p1';
   state.phase = 'deployment';
   state.pendingAction = null;
+  addLog(state, 'Battleplans locked in. The duel begins!');
   return state;
 }
 
@@ -596,11 +612,16 @@ function endConflict(state, action, uid) {
   const next = otherPlayer(seat);
   state.activePlayer = next;
   state.turnNumber += 1;
-  state.players[seat].currentBattleplan = null;
   state.players[seat].turnFlags = freshTurnFlags();
   state.players[next].turnFlags = freshTurnFlags();
+  // Refresh next player's TP from their tribute pile.
+  state.players[next].tp = (state.players[next].tribute || []).length;
   resetTurnTemporaryEffects(state);
-  prepareStrategyPhase(state, next);
+  // Draw 2 cards to start the next player's turn.
+  drawCards(state.players[next], 2);
+  state.phase = 'deployment';
+  state.pendingAction = null;
+  addLog(state, `${state.players[next].name}'s turn begins (drew 2 cards).`);
   return state;
 }
 
