@@ -133,8 +133,18 @@ function chooseDeploymentAction(state, difficulty) {
   const bot = state.players.p2;
   const label = String(difficulty || 'normal').toLowerCase();
 
-  // 1) Play the best affordable unit into a sensible empty lane.
   const emptyLanes = CONFIG.LANES.filter(lane => !bot.board.lanes[lane].unit);
+  const canAffordAny = bot.hand.some(c =>
+    (c.type === 'unit' || c.type === 'equipment' || c.type === 'eventTrap') && (c.cost || 0) <= bot.tp
+  );
+
+  // 0) Build tribute if nothing is affordable and we still have cards to spare.
+  if (!canAffordAny && bot.hand.length > 2) {
+    const card = chooseTributeCard(bot.hand, label);
+    if (card) return { type: 'TRIBUTE_CARD', cardId: card.instanceId };
+  }
+
+  // 1) Play the best affordable unit into a sensible empty lane.
   const units = bot.hand.filter(c => c.type === 'unit' && (c.cost || 0) <= bot.tp);
   if (emptyLanes.length && units.length) {
     const unit = chooseUnitToPlay(units, label);
@@ -163,7 +173,24 @@ function chooseDeploymentAction(state, difficulty) {
     }
   }
 
+  // 4) If still can't do anything useful and have spare cards, keep building tribute.
+  if (bot.hand.length > 2) {
+    const lowest = chooseTributeCard(bot.hand, label);
+    if (lowest) return { type: 'TRIBUTE_CARD', cardId: lowest.instanceId };
+  }
+
   return { type: 'END_DEPLOYMENT' };
+}
+
+function chooseTributeCard(hand, difficulty) {
+  if (!hand.length) return null;
+  // Prefer sacrificing eventTrap/spell cards first — they give +3 TP (including volatile +2).
+  const spell = hand.find(c => c.type === 'eventTrap');
+  if (spell) return spell;
+  // Otherwise sacrifice the lowest-value card (equipment or weakest unit).
+  const equipment = hand.find(c => c.type === 'equipment');
+  if (equipment) return equipment;
+  return [...hand].sort((a, b) => unitScore(a) - unitScore(b))[0] || null;
 }
 
 function chooseUnitToPlay(units, difficulty) {
