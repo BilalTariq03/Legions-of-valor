@@ -420,7 +420,10 @@ function declareAttack(state, action, uid) {
       toLane,
       strikeStyle,
       attackAP,
-      baseDefendAP: defendAP
+      baseDefendAP: defendAP,
+      attackingUnitName: attackingUnit?.name || 'Unknown',
+      attackingUnitFaction: attackingUnit?.faction || '',
+      defendingUnitName: defendingUnit?.name || 'Unknown'
     };
     addLog(state, `${defender.name} may Parry against ${attackingUnit.name}.`);
     return state;

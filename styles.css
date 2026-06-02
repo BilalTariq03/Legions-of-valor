@@ -344,6 +344,42 @@ select option { background: #1b100b; color: var(--text); }
 .battleplan:hover { background: rgba(216,167,58,.14); transition: background .22s ease; }
 .battleplan h3 { font-family: Cinzel, serif; margin: 0 0 8px; color: #ffe2a2; }
 .parry-hand { display: flex; gap: 10px; overflow-x: auto; min-height: 190px; padding: 10px; background: rgba(0,0,0,.24); border-radius: 14px; }
+
+.parry-attack-info {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.parry-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+.parry-label {
+  color: var(--text-muted, #aaa);
+  font-size: 0.78rem;
+}
+.parry-value {
+  font-weight: bold;
+  color: var(--text, #eee);
+}
+.parry-value.danger { color: #e05555; }
+.parry-value.safe   { color: #5bc47a; }
+.parry-value.highlight-lane {
+  color: var(--gold, #c9a84c);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.parry-divider {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 4px 0;
+}
 .error-toast {
   position: fixed; right: 20px; bottom: 20px; z-index: 200;
   background: rgba(92,0,0,.94); color: #fff;

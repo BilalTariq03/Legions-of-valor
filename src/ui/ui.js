@@ -351,14 +351,49 @@ function renderPendingModal(state, mySeat) {
       const c = hand.find(x => x.instanceId === id);
       return sum + (c ? effectiveDp(c, parryPlayer) : 0);
     }, 0);
-    const attackingUnit = state.players[pending.attacker]?.board?.lanes?.[pending.fromLane]?.unit;
-    const attackerInfo = attackingUnit
-      ? `<b>${escapeHtml(attackingUnit.name)}</b> from the <b>${escapeHtml(titleCaseLane(pending.fromLane))} Lane</b> is attacking your <b>${escapeHtml(titleCaseLane(pending.toLane))} Lane</b>`
-      : `An attacker from <b>${escapeHtml(titleCaseLane(pending.fromLane))}</b> is targeting your <b>${escapeHtml(titleCaseLane(pending.toLane))}</b>`;
+    const apGap = pending.attackAP - pending.baseDefendAP;
+    const gapClass = apGap > 0 ? 'danger' : 'safe';
+    const gapText = apGap > 0
+      ? `+${apGap} (unit will die without parry)`
+      : 'Already winning — parry optional';
     return `<div class="modal-backdrop"><div class="modal-card">
-      <h2 class="modal-title">Parry Chain</h2>
-      <p>${attackerInfo}.</p>
-      <p>Attack AP: <b>${pending.attackAP}</b> &nbsp;|&nbsp; Your defense: <b>${pending.baseDefendAP}</b> &nbsp;|&nbsp; Parry DP added: <b>${total}</b></p>
+      <h2 class="modal-title">&#x2694; Parry Chain</h2>
+      <div class="parry-attack-info">
+        <div class="parry-info-row">
+          <span class="parry-label">Attacking Unit</span>
+          <span class="parry-value">${escapeHtml(pending.attackingUnitName || 'Unknown')}</span>
+        </div>
+        <div class="parry-info-row">
+          <span class="parry-label">Attacking From</span>
+          <span class="parry-value">${escapeHtml(titleCaseLane(pending.fromLane))} Lane</span>
+        </div>
+        <div class="parry-info-row">
+          <span class="parry-label">Targeting Your</span>
+          <span class="parry-value highlight-lane">${escapeHtml(titleCaseLane(pending.toLane))} Lane</span>
+        </div>
+        <div class="parry-info-row">
+          <span class="parry-label">Defending Unit</span>
+          <span class="parry-value">${escapeHtml(pending.defendingUnitName || 'Unknown')}</span>
+        </div>
+        <div class="parry-divider"></div>
+        <div class="parry-info-row">
+          <span class="parry-label">Enemy Attack AP</span>
+          <span class="parry-value danger">${pending.attackAP}</span>
+        </div>
+        <div class="parry-info-row">
+          <span class="parry-label">Your Defense AP</span>
+          <span class="parry-value">${pending.baseDefendAP}</span>
+        </div>
+        <div class="parry-info-row">
+          <span class="parry-label">AP Gap to Cover</span>
+          <span class="parry-value ${gapClass}">${escapeHtml(gapText)}</span>
+        </div>
+        <div class="parry-info-row">
+          <span class="parry-label">Parry DP Selected</span>
+          <span class="parry-value">${total}</span>
+        </div>
+      </div>
+      <p class="small-note" style="margin-top:8px;">Select cards from your hand below to add their DP to your defense.</p>
       <div class="parry-hand">${hand.map(card => renderCard(card, { hand: false, selected: selected.includes(card.instanceId) }).replace('class="card', `data-action="toggle-parry-card" data-card-id="${card.instanceId}" class="card hand-card`)).join('')}</div>
       <div class="action-grid compact"><button data-action="submit-parry">Confirm Parry</button><button data-action="decline-parry">Decline Parry</button></div>
     </div></div>`;
