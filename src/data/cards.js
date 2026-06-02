@@ -218,6 +218,24 @@ export const CARD_DATABASE = [
     "maxCopies": 2
   },
   {
+    "id": "vaelori_bladeweaver",
+    "name": "Vaelori Bladeweaver",
+    "type": "unit",
+    "faction": "Elves",
+    "cost": 3,
+    "ap": 3,
+    "dp": 2,
+    "abilities": [
+      "Glean-Strike"
+    ],
+    "elite": false,
+    "equipmentSlot": null,
+    "description": "Gains +3 AP if you have used an Intel or Secrecy card this turn.",
+    "lore": "",
+    "image": "assets/cards/elves/vaelori_bladeweaver.png",
+    "maxCopies": 2
+  },
+  {
     "id": "river_calith_guard",
     "name": "River Calith Guard",
     "type": "unit",

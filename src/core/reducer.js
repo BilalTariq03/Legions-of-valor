@@ -300,9 +300,14 @@ function playEvent(state, action, uid) {
   const player = state.players[seat];
   const card = player.hand.find(c => c.instanceId === action.cardId);
   if (!card || card.type !== 'eventTrap') return errorState(state, 'Select an Event/Trap from your hand.');
-  if (tributeAvailable(player) < card.cost) return errorState(state, 'Not enough Tribute.');
+  let eventCost = card.cost;
+  if (player.turnFlags.focusActive) {
+    eventCost = Math.max(0, eventCost - 2);
+    player.turnFlags.focusActive = false;
+  }
+  if (tributeAvailable(player) < eventCost) return errorState(state, 'Not enough Tribute.');
   const event = removeFromHand(player, card.instanceId);
-  spendTribute(player, event.cost);
+  spendTribute(player, eventCost);
   const ok = applyEventEffect(state, seat, event, action.targetLane);
   player.discard.push(event);
   if (!ok) return errorState(state, `${event.name} could not resolve.`);
@@ -515,11 +520,11 @@ function resolveClash(state, context) {
   if (attackAP > defendAP && !equalizerKillsBoth) {
     const killed = killUnit(state, defender, toLane, 'clash', attacker, true);
     awardKillAurion(state, attacker, killed);
-    triggerOnWinAbilities(state, attacker, attackingUnit, defender);
+    triggerOnWinAbilities(state, attacker, attackingUnit, defender, toLane);
   } else if (defendAP > attackAP) {
     const killed = killUnit(state, attacker, fromLane, 'clash', defender, true);
     awardKillAurion(state, defender, killed);
-    triggerOnWinAbilities(state, defender, defendingUnit, attacker);
+    triggerOnWinAbilities(state, defender, defendingUnit, attacker, fromLane);
   } else {
     const killedDefender = killUnit(state, defender, toLane, 'tie', attacker, true);
     const killedAttacker = killUnit(state, attacker, fromLane, 'tie', defender, true);
@@ -576,6 +581,52 @@ function activateAbility(state, action, uid) {
   if (hasAbility(unit, 'Delirium') && !unit.temp.deliriumActive) {
     unit.temp.deliriumActive = true;
     addLog(state, `${unit.name} activates Delirium — gains +3 AP this clash but will be destroyed after.`);
+    return state;
+  }
+
+  if (hasAbility(unit, 'Mobilize')) {
+    const targetLane = action.targetLane;
+    if (!targetLane || player.board.lanes[targetLane].unit) return errorState(state, 'Choose an empty adjacent lane.');
+    const idx = CONFIG.LANES.indexOf(action.lane);
+    const targetIdx = CONFIG.LANES.indexOf(targetLane);
+    if (Math.abs(idx - targetIdx) !== 1) return errorState(state, 'Mobilize moves to adjacent lanes only.');
+    player.board.lanes[targetLane].unit = unit;
+    player.board.lanes[action.lane].unit = null;
+    addLog(state, `${unit.name} mobilized to ${titleCaseLane(targetLane)}.`);
+    return state;
+  }
+
+  if (hasAbility(unit, 'Vantage') && !unit.temp.hasAttacked) {
+    const opponentKey = otherPlayer(seat);
+    const opp = state.players[opponentKey];
+    const top3 = opp.deck.splice(0, Math.min(3, opp.deck.length));
+    if (top3.length) {
+      const discard = top3.slice().sort((a, b) => (b.cost || 0) - (a.cost || 0))[0];
+      const dIdx = top3.findIndex(c => c.instanceId === discard.instanceId);
+      top3.splice(dIdx, 1);
+      opp.discard.push(discard);
+      opp.deck.unshift(...top3);
+      addLog(state, `${unit.name}'s Vantage discarded ${discard.name} from opponent's deck.`);
+    }
+    unit.temp.hasAttacked = true;
+    return state;
+  }
+
+  if (hasAbility(unit, 'Focus') && !unit.temp.hasAttacked) {
+    player.turnFlags.focusActive = true;
+    unit.temp.hasAttacked = true;
+    addLog(state, `${unit.name} activates Focus. Next Event costs 2 less TP.`);
+    return state;
+  }
+
+  if (hasAbility(unit, 'True-Sight') && !unit.temp.hasAttacked) {
+    const opponentKey = otherPlayer(seat);
+    const opp = state.players[opponentKey];
+    for (const l of CONFIG.LANES) {
+      if (opp.board.backrow[l]) opp.board.backrow[l].revealed = true;
+    }
+    unit.temp.hasAttacked = true;
+    addLog(state, `${unit.name}'s True-Sight revealed all enemy face-down cards.`);
     return state;
   }
 

@@ -157,6 +157,13 @@ export function calculateAP(state, ownerKey, lane, mode = 'neutral') {
   if (hasAbility(unit, 'Glean-Strike') && player.turnFlags?.usedIntelOrSecrecy) ap += 3;
   // Delirium: +3 AP when the player activates it (chosen sacrifice)
   if (hasAbility(unit, 'Delirium') && unit.temp?.deliriumActive) ap += 3;
+  // Brutality: +1 AP per 2 cards in hand
+  if (hasAbility(unit, 'Brutality')) ap += Math.floor((player.hand ?? []).length / 2);
+  // Turbo: +2 AP if another friendly unit has already attacked this turn
+  if (hasAbility(unit, 'Turbo') && mode === 'attack') {
+    const others = allUnits(player).filter(x => x.unit.instanceId !== unit.instanceId && x.unit.temp?.hasAttacked);
+    if (others.length) ap += 2;
+  }
   return Math.max(0, ap);
 }
 
@@ -243,6 +250,10 @@ export function killUnit(state, ownerKey, lane, reason = 'destroyed', killerKey 
     player.aurion += 1;
     addLog(state, `${unit.name}'s Martyrdom gave ${player.name} +1 Aurion.`);
   }
+  if (hasAbility(unit, 'Rebound') && (reason === 'event' || reason === 'trap' || reason === 'calamity' || reason === 'assassinated')) {
+    drawCards(player, 1);
+    addLog(state, `${unit.name}'s Rebound drew 1 card.`);
+  }
   if (hasAbility(unit, 'Hard Bargain')) {
     player.aurion = clampMin(player.aurion - 2, 0);
     addLog(state, `${unit.name}'s Hard Bargain cost ${player.name} 2 Aurion.`);
@@ -263,7 +274,7 @@ export function awardKillAurion(state, killerKey, killedUnit) {
   addLog(state, `${player.name} gained ${killedUnit.elite ? 2 : 1} Aurion for defeating ${killedUnit.name}.`);
 }
 
-export function triggerOnWinAbilities(state, winnerKey, winningUnit, losingPlayerKey) {
+export function triggerOnWinAbilities(state, winnerKey, winningUnit, losingPlayerKey, lane = null) {
   const winner = state.players[winnerKey];
   const loser = state.players[losingPlayerKey];
   if (!winningUnit) return;
@@ -276,8 +287,15 @@ export function triggerOnWinAbilities(state, winnerKey, winningUnit, losingPlaye
     if (discarded) addLog(state, `${winningUnit.name}'s Cleave discarded ${discarded.name}.`);
   }
   if (hasAbility(winningUnit, 'Raging cry')) {
-    const discarded = randomDiscard(loser);
-    if (discarded) addLog(state, `${winningUnit.name}'s Raging Cry discarded ${discarded.name}.`);
+    const hand = [...(loser.hand ?? [])];
+    if (hand.length) {
+      const target = hand.sort((a, b) => (b.cost || 0) - (a.cost || 0))[0];
+      const idx = loser.hand.findIndex(c => c.instanceId === target.instanceId);
+      if (idx !== -1) loser.hand.splice(idx, 1);
+      loser.discard.push(target);
+      if (friendlyHasAbility(loser, 'Resilience')) drawCards(loser, 1);
+      addLog(state, `${winningUnit.name}'s Raging Cry discarded ${target.name}.`);
+    }
   }
   if (hasAbility(winningUnit, 'Hard Bargain')) {
     winner.aurion += 2;
@@ -291,6 +309,13 @@ export function triggerOnWinAbilities(state, winnerKey, winningUnit, losingPlaye
     winningUnit.temp.hasAttacked = false;
     winningUnit.temp.bloodthirstUsed = true;
     addLog(state, `${winningUnit.name}'s Bloodthirst allows another attack.`);
+  }
+  if (hasAbility(winningUnit, 'Sweeping Strike') && lane !== null) {
+    const back = loser.board.backrow[lane];
+    if (back && back.kind === 'trap') {
+      loser.board.backrow[lane] = null;
+      addLog(state, `${winningUnit.name}'s Sweeping Strike destroyed a trap in ${lane} lane.`);
+    }
   }
 }
 
@@ -323,10 +348,12 @@ export function onDeployAbilities(state, playerKey, lane, unit) {
   if (hasAbility(unit, 'Intel')) {
     const top = (player.deck || []).splice(0, 3);
     if (top.length) {
-      player.hand.push(top[0]);
-      player.deck.push(...top.slice(1));
+      const keep = top.slice().sort((a, b) => (b.cost || 0) - (a.cost || 0))[0];
+      const rest = top.filter(c => c.instanceId !== keep.instanceId);
+      player.hand.push(keep);
+      player.deck.push(...rest);
       player.turnFlags.usedIntelOrSecrecy = true;
-      addLog(state, `${unit.name}'s Intel took 1 card from the top 3.`);
+      addLog(state, `${unit.name}'s Intel: kept ${keep.name}, returned ${rest.length} card(s) to deck.`);
     }
   }
   if (hasAbility(unit, 'Excavate')) {
@@ -383,14 +410,14 @@ export function onDeployAbilities(state, playerKey, lane, unit) {
     }
   }
   if (hasAbility(unit, 'Seer')) {
-    const top = (opponent.deck || []).splice(0, Math.min(2, (opponent.deck || []).length));
-    if (top.length === 2) {
-      opponent.discard.push(top[0]);
-      opponent.deck.unshift(top[1]);
-      addLog(state, `${unit.name}'s Seer discarded ${top[0].name} and kept ${top[1].name} on top of opponent's deck.`);
-    } else if (top.length === 1) {
-      opponent.discard.push(top[0]);
-      addLog(state, `${unit.name}'s Seer discarded ${top[0].name} from opponent's deck.`);
+    const top3 = (opponent.deck || []).splice(0, Math.min(3, (opponent.deck || []).length));
+    if (top3.length) {
+      const discard = top3.slice().sort((a, b) => (b.cost || 0) - (a.cost || 0))[0];
+      const dIdx = top3.findIndex(c => c.instanceId === discard.instanceId);
+      top3.splice(dIdx, 1);
+      opponent.discard.push(discard);
+      opponent.deck.unshift(...top3);
+      addLog(state, `${unit.name}'s Seer discarded ${discard.name} from opponent's deck.`);
     }
   }
   if (hasAbility(unit, 'Shockwave')) {
