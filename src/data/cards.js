@@ -392,7 +392,8 @@ export const CARD_DATABASE = [
     "dp": 3,
     "abilities": [
       "Shatter",
-      "Infiltrator, volley"
+      "Infiltrator",
+      "Volley"
     ],
     "elite": false,
     "equipmentSlot": null,

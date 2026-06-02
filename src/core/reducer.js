@@ -6,7 +6,7 @@ import {
   removeFromHand, onDeployAbilities, applyEventEffect, calculateAP, hasAbility,
   legalAttackTargets, killUnit, awardKillAurion, triggerOnWinAbilities,
   triggerMonarchStrike, scoreEndOfTurn, checkWinner, prepareStrategyPhase,
-  resetTurnTemporaryEffects
+  resetTurnTemporaryEffects, effectiveDp, friendlyHasAbility
 } from './rules.js';
 
 export function reduceGameState(inputState, action, actorUid) {
@@ -316,7 +316,7 @@ function declareAttack(state, action, uid) {
   if (!attackingUnit) return errorState(state, 'No attacking unit in that lane.');
   if (attackingUnit.temp.hasAttacked) return errorState(state, 'That unit has already attacked.');
   if (attackingUnit.temp.cannotAttack) return errorState(state, 'That unit cannot attack this turn.');
-  if (!legalAttackTargets(attackingUnit, fromLane).includes(toLane)) return errorState(state, 'That unit cannot target that lane.');
+  if (!legalAttackTargets(attackingUnit, fromLane, defender.board?.lanes).includes(toLane)) return errorState(state, 'That unit cannot target that lane.');
 
   attacker.turnFlags.attacksDeclaredByLane = [...new Set([...(attacker.turnFlags.attacksDeclaredByLane || []), fromLane])];
   attackingUnit.temp.hasAttacked = true;
@@ -355,6 +355,17 @@ function declareAttack(state, action, uid) {
   if (!defendingUnit) {
     triggerMonarchStrike(state, seat, attackingUnit);
     addLog(state, `${attackingUnit.name} made a Monarch Strike into ${titleCaseLane(toLane)}.`);
+    checkWinner(state);
+    return state;
+  }
+
+  // Vanish: defending unit escapes to hand; attacker still gets a Monarch Strike
+  if (hasAbility(defendingUnit, 'Vanish')) {
+    defender.board.lanes[toLane].unit = null;
+    defender.hand.push(defendingUnit);
+    addLog(state, `${defendingUnit.name} used Vanish and escaped to ${defender.name}'s hand.`);
+    triggerMonarchStrike(state, seat, attackingUnit);
+    addLog(state, `${attackingUnit.name} made a Monarch Strike into the vacated ${titleCaseLane(toLane)}.`);
     checkWinner(state);
     return state;
   }
@@ -398,19 +409,40 @@ function submitParry(state, action, uid) {
   for (const id of ids) {
     const card = defender.hand.find(c => c.instanceId === id);
     if (card) {
-      parryDP += card.dp || 0;
+      parryDP += effectiveDp(card, defender);
       used.push(card);
     }
   }
-  for (const card of used) {
+  let refuelDraw = 0;
+  for (let i = 0; i < used.length; i++) {
+    const card = used[i];
     removeFromHand(defender, card.instanceId);
-    defender.discard.push(card);
+    if (used.length === 1 && hasAbility(card, 'Logistics Shield')) {
+      // Only card in parry chain: add its DP to mana instead of discarding
+      defender.mana += card.dp || 0;
+      defender.discard.push(card);
+      addLog(state, `${card.name}'s Logistics Shield added ${card.dp || 0} Mana.`);
+    } else if (i === 1 && hasAbility(card, 'Chain-Link')) {
+      // 2nd card in chain goes to Tribute
+      defender.tribute.push(card);
+      addLog(state, `${card.name}'s Chain-Link moved it to Tribute.`);
+    } else {
+      defender.discard.push(card);
+    }
+    if (i === 1 && hasAbility(card, 'Refuel')) refuelDraw = 2;
+  }
+  // Resilience: draw 1 per parry card discarded from hand
+  if (used.length > 0 && friendlyHasAbility(defender, 'Resilience')) {
+    drawCards(defender, used.length);
   }
   const finalDefendAP = pending.baseDefendAP + parryDP;
   addLog(state, `${defender.name} parried with ${used.length} card(s), adding ${parryDP} DP.`);
   resolveClash(state, { ...pending, defendAP: finalDefendAP, parryCardIds: ids });
+  if (refuelDraw > 0) {
+    drawCards(defender, refuelDraw);
+    addLog(state, `Refuel drew ${refuelDraw} cards.`);
+  }
   if (ids.length >= 2) {
-    // The flag is finally set if defender survives/wins inside resolve preview. This approximation rewards successful heavy parries.
     defender.turnFlags.usedParryChainTwoPlusToWin = true;
   }
   state.pendingAction = null;
@@ -462,7 +494,7 @@ function resolveClash(state, context) {
     awardKillAurion(state, defender, killed);
     addLog(state, `${defendingUnit.name}'s Spiked ability destroyed the attacker.`);
   }
-  if (hasAbility(attackingUnit, 'Delirium') && attackingUnit.temp.usedDelirium) {
+  if (hasAbility(attackingUnit, 'Delirium') && attackingUnit.temp?.deliriumActive) {
     killUnit(state, attacker, fromLane, 'delirium');
   }
 }
@@ -498,6 +530,34 @@ function activateAbility(state, action, uid) {
     player.board.lanes[targetLane].unit = unit;
     player.board.lanes[action.lane].unit = null;
     addLog(state, `${unit.name} shifted to ${titleCaseLane(targetLane)}.`);
+    return state;
+  }
+
+  // Delirium: player chooses to sacrifice +3 AP this clash; unit is destroyed after combat
+  if (hasAbility(unit, 'Delirium') && !unit.temp.deliriumActive) {
+    unit.temp.deliriumActive = true;
+    addLog(state, `${unit.name} activates Delirium — gains +3 AP this clash but will be destroyed after.`);
+    return state;
+  }
+
+  // Banish: return an enemy unit and all its equipment to that player's hand
+  if (hasAbility(unit, 'Banish')) {
+    const targetLane = action.targetLane;
+    if (!targetLane || !CONFIG.LANES.includes(targetLane)) return errorState(state, 'Choose an enemy lane to Banish.');
+    const defenderKey = otherPlayer(seat);
+    const defPlayer = state.players[defenderKey];
+    const targetUnit = defPlayer.board?.lanes?.[targetLane]?.unit;
+    if (!targetUnit) return errorState(state, 'No enemy unit in that lane.');
+    for (const slot of ['weapon', 'armor']) {
+      if (targetUnit.equipment?.[slot]) {
+        defPlayer.hand.push(targetUnit.equipment[slot]);
+        targetUnit.equipment[slot] = null;
+      }
+    }
+    defPlayer.hand.push(targetUnit);
+    defPlayer.board.lanes[targetLane].unit = null;
+    unit.temp.hasAttacked = true;
+    addLog(state, `${unit.name}'s Banish returned ${targetUnit.name} to ${defPlayer.name}'s hand.`);
     return state;
   }
 

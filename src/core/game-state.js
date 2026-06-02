@@ -59,7 +59,8 @@ export function freshTurnFlags() {
     revealedFaceDown: false,
     attacksDeclaredByLane: [],
     lostUnitThisTurn: false,
-    equipmentWasActiveAtEnd: false
+    equipmentWasActiveAtEnd: false,
+    usedIntelOrSecrecy: false
   };
 }
 
@@ -111,7 +112,8 @@ export function freshUnitTemp() {
     bloodthirstUsed: false,
     cannotAttack: false,
     cannotUseAbility: false,
-    noEquipmentBuffThisTurn: false
+    noEquipmentBuffThisTurn: false,
+    deliriumActive: false
   };
 }
 

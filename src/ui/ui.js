@@ -3,7 +3,7 @@ import { FACTIONS } from '../data/cards.js';
 import { getDecksForFaction, getDefaultDecks, DECK_SIZE } from '../data/decks.js';
 import { abilityText } from '../data/abilities.js';
 import { otherPlayer, titleCaseLane } from '../core/utils.js';
-import { calculateAP, faceDownCost, legalAttackTargets, countEquipment } from '../core/rules.js';
+import { calculateAP, faceDownCost, legalAttackTargets, countEquipment, effectiveDp } from '../core/rules.js';
 
 
 function renderDeckOptionsForFaction(faction, selectedId = '') {
@@ -246,7 +246,7 @@ function renderSelectionActions(state, mySeat, card, selectedUnit, uiState) {
 
   if (selectedUnit) {
     const lane = uiState.selectedUnitLane;
-    const targets = legalAttackTargets(selectedUnit, lane);
+    const targets = legalAttackTargets(selectedUnit, lane, state.players[otherPlayer(mySeat)]?.board?.lanes);
     const attackButtons = targets.flatMap(t => [
       `<button data-action="declare-attack" data-from-lane="${lane}" data-to-lane="${t}" data-style="commit">Commit ${titleCaseLane(t)}</button>`,
       `<button data-action="declare-attack" data-from-lane="${lane}" data-to-lane="${t}" data-style="cautious">Cautious ${titleCaseLane(t)}</button>`
@@ -334,7 +334,11 @@ function renderPendingModal(state, mySeat) {
   if (pending.type === 'parry' && pending.defender === mySeat) {
     const hand = state.players[mySeat].hand;
     const selected = window.__lovParrySelection || [];
-    const total = selected.reduce((sum, id) => sum + (hand.find(c => c.instanceId === id)?.dp || 0), 0);
+    const parryPlayer = state.players[mySeat];
+    const total = selected.reduce((sum, id) => {
+      const c = hand.find(x => x.instanceId === id);
+      return sum + (c ? effectiveDp(c, parryPlayer) : 0);
+    }, 0);
     return `<div class="modal-backdrop"><div class="modal-card">
       <h2 class="modal-title">Parry Chain</h2>
       <p>Enemy attack AP: <b>${pending.attackAP}</b>. Your current defense value: <b>${pending.baseDefendAP}</b>. Selected DP: <b>${total}</b>.</p>

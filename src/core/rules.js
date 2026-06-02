@@ -104,7 +104,15 @@ export function calculateAP(state, ownerKey, lane, mode = 'neutral') {
   if (!unit) return 0;
   let ap = unit.ap || 0;
   ap += unit.temp?.apMod || 0;
-  ap += equipmentApBonus(unit, mode);
+
+  // Equipment bonus — may be negated by Dampen
+  const eqBonus = equipmentApBonus(unit, mode);
+  ap += eqBonus;
+  const oppKey = otherPlayer(ownerKey);
+  const oppUnit = state.players[oppKey]?.board?.lanes?.[lane]?.unit;
+  if (oppUnit && (hasAbility(oppUnit, 'Dampen') || hasAbility(oppUnit.equipment?.weapon, 'Dampen') || hasAbility(oppUnit.equipment?.armor, 'Dampen'))) {
+    ap -= eqBonus;
+  }
 
   if (mode === 'attack') {
     if (hasAbility(unit, 'Challenger')) ap += 2;
@@ -122,17 +130,35 @@ export function calculateAP(state, ownerKey, lane, mode = 'neutral') {
     const nonOrcs = allUnits(player).filter(x => x.unit.faction !== 'Orcs').length;
     ap += nonOrcs;
   }
+  // Momentum: +2 AP per other allied same-faction unit (unit ability or equipment)
+  const allEquip = [unit.equipment?.weapon, unit.equipment?.armor].filter(Boolean);
+  if (hasAbility(unit, 'Momentum') || allEquip.some(eq => hasAbility(eq, 'Momentum'))) {
+    const allies = allUnits(player).filter(x => x.unit.instanceId !== unit.instanceId && x.unit.faction === unit.faction).length;
+    ap += allies * 2;
+  }
+  // Glean-Strike: +3 AP if an Intel or Secrecy card was used this turn
+  if (hasAbility(unit, 'Glean-Strike') && player.turnFlags?.usedIntelOrSecrecy) ap += 3;
+  // Delirium: +3 AP when the player activates it (chosen sacrifice)
+  if (hasAbility(unit, 'Delirium') && unit.temp?.deliriumActive) ap += 3;
   return Math.max(0, ap);
 }
 
-export function legalAttackTargets(unit, lane) {
+export function legalAttackTargets(unit, lane, defenderLanes = null) {
   const lanes = [lane];
   if (hasAbility(unit, 'Volley')) {
     if (lane === 'left') lanes.push('center');
     if (lane === 'center') lanes.push('left', 'right');
     if (lane === 'right') lanes.push('center');
   }
-  return [...new Set(lanes)];
+  const targets = [...new Set(lanes)];
+  if (!defenderLanes) return targets;
+  // Halt: if defender has a Halt unit adjacent to the attacker's lane, Volley is blocked
+  const attackerIdx = CONFIG.LANES.indexOf(lane);
+  const haltBlocked = CONFIG.LANES.some(l => {
+    const u = defenderLanes[l]?.unit;
+    return u && hasAbility(u, 'Halt') && Math.abs(CONFIG.LANES.indexOf(l) - attackerIdx) === 1;
+  });
+  return haltBlocked ? [lane] : targets;
 }
 
 export function removeFromHand(player, instanceId) {
@@ -141,11 +167,19 @@ export function removeFromHand(player, instanceId) {
   return player.hand.splice(idx, 1)[0];
 }
 
+export function effectiveDp(card, player) {
+  let dp = card.dp || 0;
+  if (hasAbility(card, 'Solidarity')) dp += playerUnitCount(player);
+  return dp;
+}
+
 export function randomDiscard(player) {
-  if (!player.hand.length) return null;
+  if (!(player.hand || []).length) return null;
   const idx = Math.floor(Math.random() * player.hand.length);
   const [card] = player.hand.splice(idx, 1);
   player.discard.push(card);
+  // Resilience: draw 1 for each card discarded from hand while unit is deployed
+  if (friendlyHasAbility(player, 'Resilience')) drawCards(player, 1);
   return card;
 }
 
@@ -270,10 +304,11 @@ export function onDeployAbilities(state, playerKey, lane, unit) {
   }
 
   if (hasAbility(unit, 'Intel')) {
-    const top = player.deck.splice(0, 3);
+    const top = (player.deck || []).splice(0, 3);
     if (top.length) {
       player.hand.push(top[0]);
       player.deck.push(...top.slice(1));
+      player.turnFlags.usedIntelOrSecrecy = true;
       addLog(state, `${unit.name}'s Intel took 1 card from the top 3.`);
     }
   }
@@ -321,7 +356,25 @@ export function onDeployAbilities(state, playerKey, lane, unit) {
     }
   }
   if (hasAbility(unit, 'Secrecy')) {
-    addLog(state, `${unit.name}'s Secrecy revealed hidden information to its owner.`);
+    player.turnFlags.usedIntelOrSecrecy = true;
+    const handCopy = [...(opponent.hand || [])].sort(() => Math.random() - 0.5);
+    const revealed = handCopy.slice(0, Math.min(2, handCopy.length));
+    if (revealed.length > 0) {
+      addLog(state, `${unit.name}'s Secrecy revealed: ${revealed.map(c => c.name).join(', ')}.`);
+    } else {
+      addLog(state, `${unit.name}'s Secrecy: opponent hand is empty.`);
+    }
+  }
+  if (hasAbility(unit, 'Seer')) {
+    const top = (opponent.deck || []).splice(0, Math.min(2, (opponent.deck || []).length));
+    if (top.length === 2) {
+      opponent.discard.push(top[0]);
+      opponent.deck.unshift(top[1]);
+      addLog(state, `${unit.name}'s Seer discarded ${top[0].name} and kept ${top[1].name} on top of opponent's deck.`);
+    } else if (top.length === 1) {
+      opponent.discard.push(top[0]);
+      addLog(state, `${unit.name}'s Seer discarded ${top[0].name} from opponent's deck.`);
+    }
   }
   if (hasAbility(unit, 'Shockwave')) {
     removeFirstEnemyEquipment(state, playerKey);
@@ -372,8 +425,10 @@ export function applyEventEffect(state, playerKey, card, targetLane = null) {
     return true;
   }
   if (name.includes('rain of volleys') || hasAbility(card, 'Handicap')) {
-    for (const { unit } of allUnits(opponent)) unit.temp.apMod -= 1;
-    addLog(state, `${card.name}: all enemy units get -1 AP this turn.`);
+    for (const { unit } of allUnits(opponent)) {
+      if (!hasAbility(unit, 'Aegis')) unit.temp.apMod -= 1;
+    }
+    addLog(state, `${card.name}: enemy units without Aegis get -1 AP this turn.`);
     return true;
   }
   if (name.includes('transmute') || hasAbility(card, 'Transmute')) {
@@ -391,7 +446,11 @@ export function applyEventEffect(state, playerKey, card, targetLane = null) {
     return true;
   }
   if (name.includes('chain down') || hasAbility(card, 'Chain down') || hasAbility(card, 'Chain Down')) {
-    const unit = opponent.board.lanes[targetLane || 'center']?.unit;
+    const unit = opponent.board?.lanes?.[targetLane || 'center']?.unit;
+    if (unit && hasAbility(unit, 'Aegis')) {
+      addLog(state, `${unit.name}'s Aegis blocked Chain Down.`);
+      return true;
+    }
     if (unit) {
       unit.temp.cannotAttack = true;
       unit.temp.cannotUseAbility = true;
@@ -413,9 +472,15 @@ export function applyEventEffect(state, playerKey, card, targetLane = null) {
   }
   if (name.includes('calamity') || hasAbility(card, 'Calamity')) {
     const lane = targetLane || 'center';
-    killUnit(state, 'p1', lane, 'calamity');
-    killUnit(state, 'p2', lane, 'calamity');
-    addLog(state, `${card.name}: destroyed all units in ${titleCaseLane(lane)}.`);
+    for (const pKey of ['p1', 'p2']) {
+      const u = state.players[pKey]?.board?.lanes?.[lane]?.unit;
+      if (u && hasAbility(u, 'Aegis')) {
+        addLog(state, `${u.name}'s Aegis survived Calamity.`);
+      } else {
+        killUnit(state, pKey, lane, 'calamity');
+      }
+    }
+    addLog(state, `${card.name}: Calamity struck ${titleCaseLane(lane)}.`);
     return true;
   }
   if (name.includes('order of the elven empire') || hasAbility(card, 'Banishment')) {
@@ -423,7 +488,7 @@ export function applyEventEffect(state, playerKey, card, targetLane = null) {
       const p = state.players[pKey];
       for (const lane of CONFIG.LANES) {
         const unit = p.board.lanes[lane].unit;
-        if (unit && unit.cost < 5) {
+        if (unit && unit.cost < 5 && !hasAbility(unit, 'Aegis')) {
           p.board.lanes[lane].unit = null;
           p.hand.push(unit);
         }
@@ -443,6 +508,11 @@ export function applyEventEffect(state, playerKey, card, targetLane = null) {
   }
   if (name.includes('contract of the') || hasAbility(card, 'Assasinate')) {
     const lane = targetLane || 'center';
+    const assassinTarget = opponent.board?.lanes?.[lane]?.unit;
+    if (assassinTarget && hasAbility(assassinTarget, 'Aegis')) {
+      addLog(state, `${assassinTarget.name}'s Aegis blocked the assassination.`);
+      return true;
+    }
     const killed = killUnit(state, opponentKey, lane, 'assassinated', playerKey);
     if (killed) addLog(state, `${card.name}: destroyed ${killed.name}.`);
     return true;
@@ -518,6 +588,15 @@ export function scoreEndOfTurn(state, playerKey) {
     const reward = player.currentBattleplan.reward || 0;
     player.aurion += reward;
     addLog(state, `${player.name} completed ${player.currentBattleplan.name} for +${reward} Aurion.`);
+    const hasSovereign = allUnits(player).some(({ unit }) =>
+      hasAbility(unit, 'Sovereign') ||
+      hasAbility(unit.equipment?.weapon, 'Sovereign') ||
+      hasAbility(unit.equipment?.armor, 'Sovereign')
+    );
+    if (hasSovereign) {
+      player.aurion += 1;
+      addLog(state, `${player.name}'s Sovereign granted +1 bonus Aurion.`);
+    }
   }
   applyMomentumThresholds(state, playerKey);
 }
